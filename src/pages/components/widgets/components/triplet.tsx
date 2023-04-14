@@ -34,7 +34,7 @@ export default ({context}: TripletProps) => {
         controller = new AbortController()
         const signal = controller.signal
 
-        fetch("http://127.0.0.1:8000/generate_triplet", {
+        fetch("http://127.0.0.1:8000/generate_triples", {
             signal : signal,
             method : "POST",
             headers: {

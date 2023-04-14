@@ -1,0 +1,12 @@
+_QA_TEMPLATE = \
+    """Instruction: You are a tool designed to extract {number} questions that you can answer using the context.
+    Format: question|answer<|>question|answer<|>question|answer
+
+    EXAMPLE:'We met next day as he had arranged, and inspected the rooms at No. 221B, Baker Street, of which he had spoken at our meeting'
+    Output: Where did they meet the next day?|They met at No. 221B, Baker Street.<|>What did they do when they met the next day?|They inspected the rooms at No. 221B, Baker Street<|>What is the address of the rooms they inspected?|No. 221B, Baker Street
+    EXAMPLE:'Le lendemain, Laurent s'éveilla frais et dispos. Il avait bien dormi. L'air froid qui entrait par la fenêtre fouettait son sang alourdi. Il se rappelait à peine les scènes de la veille; sans la cuisson ardente qui le brûlait au cou, il aurait pu croire qu'il s'était couché à dix heures, après une soirée calme. La morsure de Camille était comme un fer rouge posé sur sa peau; lorsque sa pensée se fut arrêtée sur la douleur que lui causait cette entaille, il en souffrit cruellement. Il lui semblait qu'une douzaine d'aiguilles pénétraient peu à peu dans sa chair. Il rabattit le col de sa chemise et regarda la plaie dans un méchant miroir de quinze sous accroché au mur. Cette plaie faisait un trou rouge, large comme une pièce de deux sous; la peau avait été arrachée, la chair se montrait, rosâtre, avec des taches noires; des filets de sang avaient coulé jusqu'à l'épaule, en minces traînées qui s'écaillaient. Sur le cou blanc, la morsure paraissait d'un brun sourd et puissant; elle se trouvait à droite, au-dessous de l'oreille. Laurent, le dos courbé, le cou tendu, regardait, et le miroir verdâtre donnait à sa face une grimace atroce.'
+    Output: Comment Laurent se sentait-il le lendemain matin ?|Le lendemain, Laurent s'éveilla frais et dispos. Il avait bien dormi.<|>Comment était l'air qui entrait par la fenêtre ?|L'air qui entrait par la fenêtre était froid et fouettait le sang alourdi de Laurent.<|>Comment Laurent décrivait-il la morsure de Camille ?|Laurent décrivait la morsure de Camille comme une cuisson ardente qui le brûlait au cou, comme un fer rouge posé sur sa peau, et comme une douzaine d'aiguilles pénétrant peu à peu dans sa chair.<|>Comment Laurent a-t-il examiné sa plaie ?|Laurent a rabattu le col de sa chemise et a regardé la plaie dans un miroir accroché au mur.
+
+    Context: '{context}'
+
+    A:"""
