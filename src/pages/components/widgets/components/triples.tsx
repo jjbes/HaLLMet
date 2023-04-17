@@ -5,10 +5,10 @@ import Graph from "react-graph-vis"
 
 let controller: AbortController
 
-type TripletProps = {
+type TriplesProps = {
     context:string|null
 }
-export default ({context}: TripletProps) => {
+export default ({context}: TriplesProps) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [graph, setGraph] = useState<{edges:Object[], nodes:Object[]}|null>(null)
 
@@ -54,13 +54,11 @@ export default ({context}: TripletProps) => {
                     if( triple.split("|").length != 3) return
                     const [s,p,o] = triple.split("|")
     
-                    edges.push({from:s, to:o, label:p})
-                    nodes.push({id: s, label:s })
-                    nodes.push({id: o, label:o })
+                    edges.push({from:s, to:o, label:p, dashes: true})
+                    nodes.push({id: s, label:s, color: "#ffffff" })
+                    nodes.push({id: o, label:o, color: "#ffffff" })
                 })  
 
-                console.log(uniq(nodes))
-                console.log(edges)
                 setGraph({
                     nodes: uniq(nodes),
                     edges: edges,
@@ -79,9 +77,9 @@ export default ({context}: TripletProps) => {
     )
 
     if (!graph || graph.edges.length == 0) return (
-        <Alert content={"No triplets extracted"}/>
+        <Alert content={"No triples extracted"}/>
     )
-    console.log("test")
+
     return (
         <div className="h-full w-full bg-white">
             <Graph

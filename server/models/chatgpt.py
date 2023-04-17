@@ -10,5 +10,5 @@ def request_GPT(content, max_tokens=300):
         temperature=0,
         max_tokens=max_tokens,
         messages=[{"role": "system", "content":content}],
-    )    
+    )  
     return {"response": response["choices"][0]["message"]['content']}

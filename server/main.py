@@ -5,7 +5,10 @@ from pydantic import BaseModel
 import tiktoken
 
 from models.chatgpt import request_GPT 
+
 from templates.chatbot import _CHATBOT_TEMPLATE_NO_CONTEXT, _CHATBOT_TEMPLATE
+from templates.compress import _COMPRESS_TEMPLATE
+from templates.emojize import _EMOJIZE_TEMPLATE
 from templates.highlight import _HIGHLIGHT_TEMPLATE
 from templates.qa import _QA_TEMPLATE
 from templates.rephrase import _REPHRASE_TEMPLATE
@@ -43,6 +46,22 @@ def ask_chatbot(item: ChatBot):
     verify_context_size(item.context)
     template = _CHATBOT_TEMPLATE if item.context != "" else _CHATBOT_TEMPLATE_NO_CONTEXT 
     return request_GPT(template.format(context=item.context, question=item.question))  
+
+""" Basic chat with ChatGPT using a context """
+class Compress(BaseModel):
+    context: str
+@app.post("/compress")
+async def compress(item: Compress):
+    verify_context_size(item.context, max_tokens=1000)
+    return request_GPT(_COMPRESS_TEMPLATE.format(context=item.context), max_tokens=500)  
+
+""" Basic chat with ChatGPT using a context """
+class Emojize(BaseModel):
+    triples: str
+@app.post("/emojize")
+async def compress(item: Emojize):
+    verify_context_size(item.triples, max_tokens=1000)
+    return request_GPT(_EMOJIZE_TEMPLATE.format(context=item.triples), max_tokens=500)  
 
 """ Quote and explain most important sentence of a context"""
 class Highlight(BaseModel):
