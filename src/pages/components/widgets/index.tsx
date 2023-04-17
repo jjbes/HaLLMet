@@ -57,8 +57,8 @@ export default ({infos, context}: ExampleProps) => {
            
             <div className="px-2 h-1/2">
                 <div className="flex -mx-2 h-full">
-                    <Card title={"Translation"} content={<Translation context={context}></Translation>}></Card>
                     <Card title={"Rephrasing"} content={<Rephrase context={context}></Rephrase>}></Card>
+                    <Card title={"Translation"} content={<Translation context={context}></Translation>}></Card>
                 </div>
             </div>
         </div>

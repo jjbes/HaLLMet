@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Loader from './common/loader'
 import Alert from './common/alert'
+import requestPostMethod from '../../../api'
 
 let controller: AbortController
 
@@ -19,19 +20,10 @@ export default ({context}: HighlightProps) => {
 
         if (controller) controller.abort()
         controller = new AbortController()
-        const signal = controller.signal
 
-        fetch("http://127.0.0.1:8000/highlight", {
-            signal:signal,
-            method : "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "context": context,
-            })
-        }).then(response => response.json())
+        const body = JSON.stringify({ "context": context })
+        requestPostMethod("highlight", body, controller)
+        .then(response => response.json())
             .then(response => {
                 const [sentence, explanation] = response.response.split("|")
 

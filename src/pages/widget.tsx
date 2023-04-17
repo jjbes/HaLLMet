@@ -15,11 +15,11 @@ export default () => {
 
     return (
         <div className="h-full flex md:flex-row">
-            <div className="w-full md:w-2/6 p-4 text-center text-gray-700">
+            <div className="w-full md:w-3/6 p-4 text-center text-gray-700">
                 <Epub setInfos={setInfos} selections={selections} setSelections={setSelections}/>
             </div>
             
-            <div className="w-full md:w-4/6 p-4 text-center text-gray-200 overflow-y-auto">
+            <div className="w-full md:w-3/6 pl-2 p-6 text-center text-gray-200 overflow-y-auto">
                 <Widgets infos={infos} context={context}/>
             </div>
         </div>

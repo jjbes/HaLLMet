@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import Loader from './common/loader'
 import Alert from './common/alert'
 import Graph from "react-graph-vis"
+import requestPostMethod from '../../../api'
 
-let controller: AbortController
+let controller = new AbortController()
 
 type TriplesProps = {
     context:string|null
@@ -32,20 +33,13 @@ export default ({context}: TriplesProps) => {
 
         if (controller) controller.abort()
         controller = new AbortController()
-        const signal = controller.signal
 
-        fetch("http://127.0.0.1:8000/generate_triples", {
-            signal : signal,
-            method : "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "context": context,
-                "number":4
-            })
-        }).then(response => response.json())
+        const body = JSON.stringify({
+            "context": context,
+            "number": 4
+        })
+        requestPostMethod("generate_triples", body, controller)
+        .then(response => response.json())
             .then(response => {
                 let edges: Object[] = []
                 let nodes: Object[] = []

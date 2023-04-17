@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import Loader from './common/loader'
 import Message from './common/message'
 import Alert from './common/alert'
+import requestPostMethod from '../../../api'
 
-let controller: AbortController
+let controller = new AbortController()
 
 type TranslateProps = {
     context:string|null
@@ -13,7 +14,6 @@ export default ({context}: TranslateProps) => {
     const [content, setContent] = useState<string|null>(null)
     const [language, setLanguage] = useState<string>("french")
 
-    
     const translations = [
         ["🇯🇵","japanese"],
         ["🇩🇪","german"],
@@ -31,20 +31,13 @@ export default ({context}: TranslateProps) => {
 
         if (controller) controller.abort()
         controller = new AbortController()
-        const signal = controller.signal
 
-        fetch("http://127.0.0.1:8000/translate", {
-            signal: signal,
-            method : "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "context": context,
-                "language": language
-            })
-        }).then(response => response.json())
+        const body = JSON.stringify({
+            "context": context,
+            "language": language
+        })
+        requestPostMethod("translate", body, controller)
+        .then(response => response.json())
             .then(response => {
                 setContent(response.response)
                 setLoading(false)

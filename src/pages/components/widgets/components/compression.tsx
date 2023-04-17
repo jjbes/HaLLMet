@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Loader from './common/loader'
 import Message from './common/message'
 import Alert from './common/alert'
+import requestPostMethod from '../../../api'
 
 let controller: AbortController
 
@@ -20,19 +21,10 @@ export default ({context}: CompressionProps) => {
 
         if (controller) controller.abort()
         controller = new AbortController()
-        const signal = controller.signal
 
-        fetch("http://127.0.0.1:8000/compress", {
-            signal:signal,
-            method : "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "context": context,
-            })
-        }).then(response => response.json())
+        const body = JSON.stringify({ "context": context })
+        requestPostMethod("compress", body, controller)
+        .then(response => response.json())
             .then(response => {
                 setContent(response.response)
                 setLoading(false)

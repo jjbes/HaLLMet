@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import Loader from './common/loader'
 import Alert from './common/alert'
 import Graph from "react-graph-vis"
+import requestPostMethod from '../../../api'
 
-let triplesController: AbortController
-let emojiController: AbortController
+
+let triplesController = new AbortController()
+let emojiController = new AbortController()
 
 type TriplesEmojiProps = {
     context:string|null
@@ -33,37 +35,22 @@ export default ({context}: TriplesEmojiProps) => {
 
         if (triplesController) triplesController.abort()
         triplesController = new AbortController()
-        const signal = triplesController.signal
 
-        fetch("http://127.0.0.1:8000/generate_triples", {
-            signal : signal,
-            method : "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "context": context,
-                "number":4
-            })
-        }).then(response => response.json())
+        const body = JSON.stringify({
+            "context": context,
+            "number":4
+        })
+        requestPostMethod("generate_triples", body, triplesController)
+        .then(response => response.json())
             .then(response => {
-
                 if (emojiController) emojiController.abort()
                 emojiController = new AbortController()
-                const signal = emojiController.signal
 
-                fetch("http://127.0.0.1:8000/emojize", {
-                    signal : signal,
-                    method : "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "triples": response.response
-                    })
-                }).then(response => response.json())
+                const bodyRes = JSON.stringify({
+                    "triples": response.response
+                })
+                requestPostMethod("emojize", bodyRes, new AbortController())
+                .then(response => response.json())
                     .then(response => {
                         let edges: Object[] = []
                         let nodes: Object[] = []
