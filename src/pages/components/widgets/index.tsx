@@ -1,4 +1,7 @@
-import React, {ReactNode} from 'react'
+import React from 'react'
+
+import Card from './components/common/card'
+
 import QA from './components/qa'
 import Summary from './components/summary'
 import Rephrase from './components/rephrase'
@@ -7,25 +10,6 @@ import Translation from './components/translation'
 import Triples from './components/triples'
 import TriplesEmoji from './components/triples_emoji'
 import Highlight from './components/highlight'
-
-type CardProps = {
-    title:string
-    content:ReactNode 
-}
-const Card = ({ title, content }: CardProps) => { 
-    return (
-        <div className="w-1/2 px-2 h-full">
-        <div className="h-full py-2">
-            <div className="h-1/12 bg-blue-500 text-white text-xs font-bold rounded-t px-2 py-1">
-                {title}
-            </div>
-            <div className='h-11/12'>
-                {content}
-            </div>
-        </div>
-    </div>
-    )
-}
 
 type ExampleProps = {
     infos:any|null

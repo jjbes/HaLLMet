@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import Epub from './components/epub'
-import Widgets from './components/widgets'
+import requestPostMethod from './api/index'
+
+let controller = new AbortController()
 
 export default () => {
     const [selections, setSelections] = useState<any[]>([])
@@ -19,14 +21,32 @@ export default () => {
         }
     }, [selections, pageContent])
 
+    useEffect(() => {
+        console.log(context)
+        if(!context){
+            document.body.setAttribute('style', 'background-color: lightgrey')
+            return
+        }
+
+        if (controller) controller.abort()
+        controller = new AbortController()
+
+        const body = JSON.stringify({ "context": context })
+        requestPostMethod("emotionColor", body, controller)
+        .then(response => response.json())
+            .then(response => {
+                document.body.setAttribute('style', 'background-color:'+ response.response)
+            }
+        ).catch(e => {
+            console.error('API call error :', e.name, e.message)
+        })
+
+    }, [context])
+
     return (
-        <div className="h-full flex md:flex-row">
-            <div className="w-full md:w-3/6 p-4 text-center text-gray-700">
+        <div className="h-full flex justify-center ">
+            <div className="w-2/4 p-4 text-center text-gray-700">
                 <Epub setInfos={setInfos} selections={selections} setSelections={setSelections} setPageContent={setPageContent}/>
-            </div>
-            
-            <div className="w-full md:w-3/6 pl-2 p-6 text-center text-gray-200 overflow-y-auto">
-                <Widgets infos={infos} context={context}/>
             </div>
         </div>
     )

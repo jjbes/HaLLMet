@@ -2,12 +2,13 @@ import React, { useRef, useState, useEffect } from 'react'
 import { ReactReader } from 'react-reader'
 
 type ReaderProps = {
-    setInfos:Function
+    file: Blob | MediaSource
     selections: any
     setSelections: Function
-    file: Blob | MediaSource
+    setInfos:Function
+    setPageContent:Function
 }
-export default ({setInfos, selections, setSelections, file }: ReaderProps) => {
+export default ({ file, selections, setSelections, setInfos, setPageContent }: ReaderProps) => {
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
 
@@ -17,8 +18,27 @@ export default ({setInfos, selections, setSelections, file }: ReaderProps) => {
         setLocation(epubcifi)
     }
 
+    //Get current page content
     useEffect(() => {
+        if(!location) return
+        if(!location.includes("epubcfi")) return
         
+        const start = renditionRef.current.currentLocation().start
+        const end = renditionRef.current.currentLocation().end
+
+        if(!start || !end) return
+        
+        const splitCfi = start.cfi.split('/')
+        const baseCfi = splitCfi[0] + '/' + splitCfi[1] + '/' + splitCfi[2] + '/' + splitCfi[3]
+        const startCfi = start.cfi.replace(baseCfi, '')
+        const endCfi = end.cfi.replace(baseCfi, '')
+        const rangeCfi = [baseCfi, startCfi, endCfi].join(',');
+
+        setPageContent(renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' '))
+    }, [location])
+
+    //Highlight content on selection
+    useEffect(() => {
         if (renditionRef.current) {
             (async () => {
                 setInfos(await renditionRef.current.book.loaded.metadata)

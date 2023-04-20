@@ -17,6 +17,12 @@ export default () => {
             Widgets Demo
           </div>
         </Link>
+
+        <Link href="/emotions">
+          <div className="bg-white w-48 h-48 m-8 rounded flex items-center justify-center">
+            Emotions Demo
+          </div>
+        </Link>
       </div>
     </main>
   )

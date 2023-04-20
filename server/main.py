@@ -15,6 +15,7 @@ from templates.rephrase import _REPHRASE_TEMPLATE
 from templates.summarize import _SUMMARIZE_TEMPLATE
 from templates.translate import _TRANSLATE_TEMPLATE
 from templates.triples import _TRIPLES_EXTRACTION_TEMPLATE
+from templates.emotion import _EMOTION_TEMPLATE
 
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -30,7 +31,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def verify_context_size(context, max_tokens=1000):
+def verify_context_size(context, min_tokens=1, max_tokens=1000):
+    if context == None:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Min tokens number is {max_tokens}, no token  have been sent."
+        )
+    if len(enc.encode(context)) < min_tokens:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Min tokens number is {min_tokens}, no token  have been sent."
+        )
     if len(enc.encode(context)) > max_tokens:
         raise HTTPException(
             status_code=413, 
@@ -43,8 +54,11 @@ class ChatBot(BaseModel):
     context: Optional[str]
 @app.post("/chat")
 def ask_chatbot(item: ChatBot):
-    verify_context_size(item.context)
-    template = _CHATBOT_TEMPLATE if item.context != "" else _CHATBOT_TEMPLATE_NO_CONTEXT 
+    if item.context == None:
+        template = _CHATBOT_TEMPLATE_NO_CONTEXT
+    else:
+        verify_context_size(item.context)
+        template = _CHATBOT_TEMPLATE if item.context != "" else _CHATBOT_TEMPLATE_NO_CONTEXT 
     return request_GPT(template.format(context=item.context, question=item.question))  
 
 """ Basic chat with ChatGPT using a context """
@@ -118,3 +132,28 @@ class Triples(BaseModel):
 def generate_triples(item: Triples):
     verify_context_size(item.context)
     return request_GPT(_TRIPLES_EXTRACTION_TEMPLATE.format(context=item.context, number=item.number))
+
+class Emotion(BaseModel):
+    context: str
+@app.post("/emotionColor")
+def ask_chatbot(item: Emotion):
+    verify_context_size(item.context)
+    
+    emotions_to_colors = {
+        "neutral":"lightgrey",
+        "love": "lightpink",
+        "contentment": "lightgreen",
+        "joy": "lightyellow",
+        "pleasure": "lightpurple",
+        "disgust": "brown",
+        "fear": "black",
+        "sadness": "lightblue",
+    }
+    emotions = list(emotions_to_colors.keys())
+
+    response = request_GPT(_EMOTION_TEMPLATE.format(context=item.context, emotions=emotions), max_tokens=15)
+    
+    if(response["response"] not in emotions):
+        return {"response": "lightgrey"}
+
+    return {"response": emotions_to_colors[response["response"]]}

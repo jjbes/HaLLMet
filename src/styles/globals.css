@@ -17,11 +17,12 @@
 }
 
 body {
+  transition: background 5000ms linear;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
       transparent,
-      rgb(var(--background-end-rgb))
+      rgba(var(--background-end-rgb), 50)
     )
     rgb(var(--background-start-rgb));
 }
