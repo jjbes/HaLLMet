@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Message from './components/message'
-import requestPostMethod from '../../api'
+import requestPostMethod from '../../../api'
 
 let controller: AbortController
 

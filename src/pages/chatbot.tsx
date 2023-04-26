@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import Epub from './components/epub'
-import Chatbox from './components/chatbox'
+import EpubReader from './components/examples/epub-reader'
+import Chatbox from './components/examples/chatbox'
 
 export default () => {
     const [selections, setSelections] = useState<any[]>([])
@@ -22,7 +22,7 @@ export default () => {
     return (
         <div className="h-full flex md:flex-row">
             <div className="w-full md:w-3/6 p-4 text-center text-gray-700">
-            <Epub setInfos={setInfos} selections={selections} setSelections={setSelections} setPageContent={setPageContent}/>
+            <EpubReader setInfos={setInfos} selections={selections} setSelections={setSelections} setPageContent={setPageContent}/>
             </div>          
 
             <div className="w-full md:w-3/6 p-4 text-center text-gray-200 overflow-y-auto">

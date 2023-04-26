@@ -5,17 +5,21 @@ from pydantic import BaseModel
 import tiktoken
 
 from models.chatgpt import request_GPT 
+from models.dreamstudio import request_dreamstudio 
 
 from templates.chatbot import _CHATBOT_TEMPLATE_NO_CONTEXT, _CHATBOT_TEMPLATE
 from templates.compress import _COMPRESS_TEMPLATE
 from templates.emojize import _EMOJIZE_TEMPLATE
+from templates.emotion import _EMOTION_TEMPLATE
+from templates.excerpt import _EXCERPT_TEMPLATE
+from templates.explain import _EXPLAIN_TEMPLATE
 from templates.highlight import _HIGHLIGHT_TEMPLATE
 from templates.qa import _QA_TEMPLATE
+from templates.location import _LOCATION_TEMPLATE
 from templates.rephrase import _REPHRASE_TEMPLATE
 from templates.summarize import _SUMMARIZE_TEMPLATE
 from templates.translate import _TRANSLATE_TEMPLATE
 from templates.triples import _TRIPLES_EXTRACTION_TEMPLATE
-from templates.emotion import _EMOTION_TEMPLATE
 
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -65,7 +69,7 @@ def ask_chatbot(item: ChatBot):
 class Compress(BaseModel):
     context: str
 @app.post("/compress")
-async def compress(item: Compress):
+def compress(item: Compress):
     verify_context_size(item.context, max_tokens=1000)
     return request_GPT(_COMPRESS_TEMPLATE.format(context=item.context), max_tokens=500)  
 
@@ -73,7 +77,7 @@ async def compress(item: Compress):
 class Emojize(BaseModel):
     triples: str
 @app.post("/emojize")
-async def compress(item: Emojize):
+def emojize(item: Emojize):
     verify_context_size(item.triples, max_tokens=1000)
     return request_GPT(_EMOJIZE_TEMPLATE.format(context=item.triples), max_tokens=500)  
 
@@ -81,7 +85,7 @@ async def compress(item: Emojize):
 class Highlight(BaseModel):
     context: str
 @app.post("/highlight")
-def rephrase(item: Highlight):
+def highlight(item: Highlight):
     verify_context_size(item.context)
     return request_GPT(_HIGHLIGHT_TEMPLATE.format(context=item.context))
 
@@ -157,3 +161,32 @@ def ask_chatbot(item: Emotion):
         return {"response": "lightgrey"}
 
     return {"response": emotions_to_colors[response["response"]]}
+
+""" Extract context meaningful excerpts"""
+class Exerpt(BaseModel):
+    context: str
+@app.post("/excerpt")
+def excerpt(item: Exerpt):
+    verify_context_size(item.context)
+    return request_GPT(_EXCERPT_TEMPLATE.format(context=item.context))
+
+""" Explain a sentence based on a context """
+class Explain(BaseModel):
+    context: str
+    sentence: str
+@app.post("/explain")
+def explain(item: Explain):
+    verify_context_size(item.context)
+    return request_GPT(_EXPLAIN_TEMPLATE.format(context=item.context, sentence=item.sentence))
+
+""" Extract location of the context """
+class Location(BaseModel):
+    context: str
+@app.post("/location")
+def location(item: Location):
+    verify_context_size(item.context)
+
+    prompt = request_GPT(_LOCATION_TEMPLATE.format(context=item.context))["response"]
+    if(prompt == "none"):
+        return {"response": None}
+    return request_dreamstudio(prompt)

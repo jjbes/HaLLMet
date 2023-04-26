@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Loader from './common/loader'
 import Alert from './common/alert'
-import requestPostMethod from '../../../api'
+import requestPostMethod from '../../../../api'
 
 let controller = new AbortController()
 

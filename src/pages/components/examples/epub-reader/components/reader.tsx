@@ -22,6 +22,7 @@ export default ({ file, selections, setSelections, setInfos, setPageContent }: R
     useEffect(() => {
         if(!location) return
         if(!location.includes("epubcfi")) return
+        if(!renditionRef.current) return
         
         const start = renditionRef.current.currentLocation().start
         const end = renditionRef.current.currentLocation().end
