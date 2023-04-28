@@ -2,9 +2,7 @@ import React, { useRef, useState, useEffect, MutableRefObject } from 'react'
 import { ReactReader } from 'react-reader'
 import requestPostMethod from '../../../../api'
 
-let excerptList: {[k: string]: any} = {}
-
-let highlightController = new AbortController()
+let excerptList: string[] = []
 
 type ReaderProps = {
     file: Blob | MediaSource
@@ -16,7 +14,6 @@ type ReaderProps = {
 export default ({ file, currentPage, setPageContent, setExplanation}: ReaderProps) => {
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
-    const [context, setContext] = useState<string|null>()
     const renditionRef = useRef<any>(null)
 
     const locationChanged = (epubcifi: string) => {
@@ -61,6 +58,15 @@ export default ({ file, currentPage, setPageContent, setExplanation}: ReaderProp
         return recursor(node)
     }
 
+    const stringToChunks = (string: string, chunkSize: number) => {
+        const chunks = [];
+        while (string.length > 0) {
+            chunks.push(string.substring(0, chunkSize));
+            string = string.substring(chunkSize, string.length);
+        }
+        return chunks
+    }
+
     //Get current page content
     useEffect(() => {
         if(!location) return
@@ -68,7 +74,6 @@ export default ({ file, currentPage, setPageContent, setExplanation}: ReaderProp
 
         const start = renditionRef.current.currentLocation().start
         const end = renditionRef.current.currentLocation().end
-
         if(!start || !end) return
         
         const splitCfi = start.cfi.split('/')
@@ -76,83 +81,79 @@ export default ({ file, currentPage, setPageContent, setExplanation}: ReaderProp
         const startCfi = start.cfi.replace(baseCfi, '')
         const endCfi = end.cfi.replace(baseCfi, '')
         const rangeCfi = [baseCfi, startCfi, endCfi].join(',');
-
         const pageContent = renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' ')
         const pageContentClean = pageContent.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
-
         setPageContent(pageContentClean)
-        setContext(pageContentClean)
-
     }, [location])
 
-    //Get Highlight
+    //Set Highlights
     useEffect(() => {
         if(!location) return
         if(!location.includes("epubcfi")) return
-        if(!renditionRef.current.currentLocation().start) return
-        if(!context) return
 
-        const startCfi = renditionRef.current.currentLocation().start.cfi
-        if(startCfi in excerptList) return
+        const start = renditionRef.current.currentLocation().start
+        if(!start) return
 
-        if (highlightController) highlightController.abort()
-        highlightController = new AbortController()
+        const section = renditionRef.current.book.spine.get(start.cfi)
+        if (excerptList.includes(section.canonical)) return
+        excerptList.push(section.canonical)
 
-        const body = JSON.stringify({ "context": context })
-        requestPostMethod("excerpt", body, highlightController)
-        .then(response => response.json())
-            .then(response => {
-                const highlights = response.response.split("|")
-                const section = renditionRef.current.book.spine.get(startCfi)
-                excerptList[startCfi] = highlights
-                
-                highlights.forEach((highlight: string) => {
-                    let paragraphs = section.contents.children[1].childNodes
+        stringToChunks(section.contents.innerText, 1500).forEach((context)=>{
+            const body = JSON.stringify({ "context": context })           
+
+            requestPostMethod("excerpt", body, null)
+            .then(response => response.json())
+                .then(response => {
+                    const highlights = response.response.split("|")
                     
-                    for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
-                        if(!paragraph.textContent) return
+                    highlights.forEach((highlight: string) => {
+                        let paragraphs = section.contents.children[1].childNodes
+                        
+                        for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
+                            if(!paragraph.textContent) return
 
-                        const pos = findInString(highlight, paragraph.textContent)
-                        if (pos != -1){
-                            const range = section.document.createRange()
-                            
-                            //setStart loop
-                            let nodes = searchInNestedNodes(paragraph, pos)
-                            let sum = 0
-                            nodes.forEach((node) => {
-                                sum += node.textContent.length
-                            })
+                            const pos = findInString(highlight, paragraph.textContent)
 
-                            range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
-                            
-                            //setEnd loop
-                            nodes = searchInNestedNodes(paragraph, pos + highlight.length)
-                            sum = 0
-                            nodes.forEach((node) => {
-                                sum += node.textContent.length
-                            })
-                            range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
+                            if (pos != -1){
+                                const range = section.document.createRange()
+                                
+                                //setStart loop
+                                let nodes = searchInNestedNodes(paragraph, pos)
+                                let sum = 0
+                                nodes.forEach((node) => {
+                                    sum += node.textContent.length
+                                })
 
-                            const cfi = section.cfiFromRange(range)
+                                range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
+                                
+                                //setEnd loop
+                                nodes = searchInNestedNodes(paragraph, pos + highlight.length)
+                                sum = 0
+                                nodes.forEach((node) => {
+                                    sum += node.textContent.length
+                                })
+                                range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
 
-                            renditionRef.current.annotations.add(
-                                'highlight',
-                                cfi,
-                                {},
-                                ()=>{ setExplanation(highlight) },
-                                'hl',
-                                { fill: 'grey', 'fill-opacity': '0.2', 'mix-blend-mode': 'multiply' }
-                            )
-                            break
+                                const cfi = section.cfiFromRange(range)
+
+                                renditionRef.current.annotations.add(
+                                    'highlight',
+                                    cfi,
+                                    {},
+                                    ()=>{ setExplanation(highlight) },
+                                    'highlight',
+                                    null
+                                )
+                                break
+                            }
                         }
-                    }
-                })
-            }
-        ).catch(e => {
-            console.error('API call error :', e.name, e.message)
+                    })
+                }
+            ).catch(e => {
+                console.error('API call error :', e.name, e.message)
+            })
         })
-
-    }, [context])
+    }, [location])
 
     return (
         <div className='h-full w-full flex flex-row relative'>

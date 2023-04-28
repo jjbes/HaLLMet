@@ -19,41 +19,41 @@ export default ({excerpt, context, currentPage}: ExplanationProps) => {
 
     //Get explanation
     useEffect(() => {
-            if(!excerpt || !context) return
-    
-            if(currentPage && currentPage in explanationList) {
-                if(excerpt in explanationList[currentPage]){
-                    setExplanation([excerpt, explanationList[currentPage][excerpt]])
-                    return
-                }
-            }
+        if(!excerpt || !context) return
 
-            if (explainController) explainController.abort()
-            explainController = new AbortController()
-    
-            setLoading(true)
-            const body = JSON.stringify({
-                "context": context,
-                "sentence": excerpt 
-            })
-            requestPostMethod("explain", body, explainController)
-            .then(response => response.json())
-                .then(response => {
-                    setExplanation([excerpt, response.response])
-                    if(currentPage && !explanationList[currentPage]) explanationList[currentPage] = {}
-                    if(currentPage) explanationList[currentPage][excerpt] = response.response
-                    setLoading(false)
-                }
-            ).catch(e => {
-                console.error('API call error :', e.name, e.message)
-            })
-    
-        }, [excerpt])
+        if(currentPage && currentPage in explanationList) {
+            if(excerpt in explanationList[currentPage]){
+                setExplanation([excerpt, explanationList[currentPage][excerpt]])
+                return
+            }
+        }
+
+        if (explainController) explainController.abort()
+        explainController = new AbortController()
+
+        setLoading(true)
+        const body = JSON.stringify({
+            "context": context,
+            "sentence": excerpt 
+        })
+        requestPostMethod("explain", body, explainController)
+        .then(response => response.json())
+            .then(response => {
+                setExplanation([excerpt, response.response])
+                if(currentPage && !explanationList[currentPage]) explanationList[currentPage] = {}
+                if(currentPage) explanationList[currentPage][excerpt] = response.response
+                setLoading(false)
+            }
+        ).catch(e => {
+            console.error('API call error :', e.name, e.message)
+        })
+
+    }, [excerpt])
 
     if(!context || !excerpt) return <></>
 
     return (
-        <div className="h-full w-1/4 p-4 text-center text-gray-700 absolute right-3">
+        <div className="w-1/4 p-4 absolute right-3">
             <div className="h-full p-4 text-center text-gray-700 bg-white rounded">
 
                 <div>

@@ -48,3 +48,18 @@ html, body, #__next {
   border-bottom: 0.6rem solid yellow; 
   border-right: 0.6rem solid transparent; 
 }
+
+.highlight{
+  fill:slategray;
+  fill-opacity: 0.15;
+  mix-blend-mode: multiply;
+  cursor: pointer;
+}
+
+.highlight:hover{
+  fill:darkslategray;
+}
+
+.epub-view svg{
+  pointer-events: all!important;
+}

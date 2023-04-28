@@ -1,4 +1,4 @@
-const requestPostResource = (resource:string , body:string, controller:AbortController) => {
+const requestPostResource = (resource:string , body:string, controller:AbortController|null) => {
     
     return fetch("http://127.0.0.1:8000/" + resource, {
         signal : controller ? controller.signal : null,
