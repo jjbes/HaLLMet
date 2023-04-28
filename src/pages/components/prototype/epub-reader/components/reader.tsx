@@ -14,7 +14,7 @@ type ReaderProps = {
 export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProps) => {
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
-    const [hlLoading, setHlLoading] = useState<boolean>(false)
+    const [nbReqLoading, setNbReqLoading] = useState<number>(0)
     const renditionRef = useRef<any>(null)
 
     const locationChanged = (epubcifi: string) => {
@@ -109,61 +109,65 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
         const section = renditionRef.current.book.spine.get(start.cfi)
         if (excerptList.includes(section.canonical)) return
         excerptList.push(section.canonical)
-        setHlLoading(true)
+        
+          
+        const chunks = stringToChunks(section.contents.textContent, 1000)
 
-        stringToChunks(section.contents.textContent, 1500).forEach((context)=>{
-            const body = JSON.stringify({ "context": context })           
+        chunks.forEach((context)=>{
+            const body = JSON.stringify({ "context": context })                   
+            
+            setNbReqLoading((val) => val + 1)
 
             requestPostMethod("excerpt", body, null)
             .then(response => response.json())
-                .then(response => {
-                    const highlights = response.response.split("|")
+            .then(response => {
+                const highlights = response.response.split("|")
+                
+                highlights.forEach((highlight: string) => {
+                    let paragraphs = section.contents.children[1].childNodes
                     
-                    highlights.forEach((highlight: string) => {
-                        let paragraphs = section.contents.children[1].childNodes
-                        
-                        for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
-                            if(!paragraph.textContent) return
+                    for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
+                        if(!paragraph.textContent) return
 
-                            const pos = findInString(highlight, paragraph.textContent)
+                        const pos = findInString(highlight, paragraph.textContent)
 
-                            if (pos != -1){
-                                const range = section.document.createRange()
-                                
-                                //setStart loop
-                                let nodes = searchInNestedNodes(paragraph, pos)
-                                let sum = 0
-                                nodes.forEach((node) => {
-                                    sum += node.textContent.length
-                                })
+                        if (pos != -1){
+                            const range = section.document.createRange()
+                            
+                            //setStart loop
+                            let nodes = searchInNestedNodes(paragraph, pos)
+                            let sum = 0
+                            nodes.forEach((node) => {
+                                sum += node.textContent.length
+                            })
 
-                                range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
-                                
-                                //setEnd loop
-                                nodes = searchInNestedNodes(paragraph, pos + highlight.length)
-                                sum = 0
-                                nodes.forEach((node) => {
-                                    sum += node.textContent.length
-                                })
-                                range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
+                            range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
+                            
+                            //setEnd loop
+                            nodes = searchInNestedNodes(paragraph, pos + highlight.length)
+                            sum = 0
+                            nodes.forEach((node) => {
+                                sum += node.textContent.length
+                            })
+                            range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
 
-                                const cfi = section.cfiFromRange(range)
+                            const cfi = section.cfiFromRange(range)
 
-                                renditionRef.current.annotations.add(
-                                    'highlight',
-                                    cfi,
-                                    {},
-                                    ()=>{ setExcerpt(highlight) },
-                                    'highlight',
-                                    null
-                                )
-                                break
-                            }
+                            renditionRef.current.annotations.add(
+                                'highlight',
+                                cfi,
+                                {},
+                                ()=>{ setExcerpt(highlight) },
+                                'highlight',
+                                null
+                            )
+                            break
                         }
-                    })
-                    setHlLoading(false)
-                }
-            ).catch(e => {
+                    }
+                })
+            }).finally(()=>{
+                setNbReqLoading((val) => val - 1)
+            }).catch(e => {
                 console.error('API call error :', e.name, e.message)
             })
         })
@@ -186,10 +190,10 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
                 />
             </div>
             {
-                hlLoading ?
+                nbReqLoading>0 ?
                 <div className='absolute top-[10px] right-0 z-50'>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </div> : 
