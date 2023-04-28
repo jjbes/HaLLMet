@@ -6,22 +6,18 @@ let excerptList: string[] = []
 
 type ReaderProps = {
     file: Blob | MediaSource
-    currentPage:MutableRefObject<any>
+    currentLocation:MutableRefObject<any>
     setPageContent:Function
     setExplanation:Function
 }
 
-export default ({ file, currentPage, setPageContent, setExplanation}: ReaderProps) => {
+export default ({ file, currentLocation, setPageContent, setExplanation}: ReaderProps) => {
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
     const renditionRef = useRef<any>(null)
 
     const locationChanged = (epubcifi: string) => {
         setLocation(epubcifi)
-
-        if(epubcifi.includes("epubcfi")) {
-            currentPage.current = epubcifi
-        }
     }
 
     const findInString = (query: string, text: string) => {
@@ -66,6 +62,21 @@ export default ({ file, currentPage, setPageContent, setExplanation}: ReaderProp
         }
         return chunks
     }
+
+    //Save current location
+    useEffect(()=>{
+        if(!location) return
+        if(!location.includes("epubcfi")) return
+
+        const start = renditionRef.current.currentLocation().start
+        if(!start) return
+        const section = renditionRef.current.book.spine.get(start.cfi)
+        
+        currentLocation.current = {
+            section:section.canonical,
+            page:location
+        }
+    }, [location])
 
     //Get current page content
     useEffect(() => {

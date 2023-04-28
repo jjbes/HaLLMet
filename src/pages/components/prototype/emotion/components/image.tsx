@@ -19,7 +19,7 @@ export default ({ imageUrl }: ImageBackgroundProps) => {
                         className="-z-50 absolute h-full w-full top-0 left-0 bg-end bg-no-repeat bg-cover after:content-[''] after:absolute after:h-full after:w-full after:backdrop-blur" 
                         style={{
                             ...style,
-                            backgroundImage: `url(${data})`,
+                            backgroundImage: data ? `url(${data})`: 'none',
                         }}
                     />
                 ))

@@ -8,7 +8,7 @@ export default () => {
     const [pageContent, setPageContent] = useState<string|null>()
     const [context, setContext] = useState<string|null>(null)
     const [explanation, setExplanation] = useState<string|null>(null)
-    const currentPage = useRef<any>(null)
+    const currentLocation = useRef<any>(null)
     
     //Handle context
     useEffect(() => {      
@@ -19,16 +19,16 @@ export default () => {
 
     return (
         <>
-        <Emotion currentPage={currentPage.current} context={context}/>
+        <Emotion currentPage={currentLocation.current ? currentLocation.current.page : null} context={context}/>
         <div className="h-full flex justify-center ">
             <div className="w-2/4 px-4 pt-4 text-center text-gray-700">
                 <EpubReader 
                     setPageContent={setPageContent} 
-                    currentPage={currentPage}
+                    currentLocation={currentLocation}
                     setExplanation={setExplanation}
                 />
             </div>
-            <Explanation context={context} excerpt={explanation} currentPage={currentPage.current}/>
+            <Explanation context={context} excerpt={explanation} currentSection={currentLocation.current ? currentLocation.current.section : null}/>
             
         </div>
         </>

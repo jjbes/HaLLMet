@@ -3,11 +3,11 @@ import Reader from './components/reader'
 import Uploader from './components/uploader'
 
 type EpubHighLightProps = {
-    currentPage: MutableRefObject<any>
+    currentLocation: MutableRefObject<any>
     setPageContent:Function
     setExplanation:Function
 }
-export default ({ currentPage, setPageContent, setExplanation}: EpubHighLightProps) => {
+export default ({ currentLocation, setPageContent, setExplanation}: EpubHighLightProps) => {
     const [file, setFile] = useState()
 
     function handleChange(event: any) {
@@ -21,7 +21,7 @@ export default ({ currentPage, setPageContent, setExplanation}: EpubHighLightPro
             <Uploader event={handleChange}/> : 
             <Reader 
                 file={file}
-                currentPage={currentPage} 
+                currentLocation={currentLocation} 
                 setExplanation={setExplanation} 
                 setPageContent={setPageContent}
             />

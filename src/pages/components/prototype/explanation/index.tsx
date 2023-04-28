@@ -10,10 +10,10 @@ let explanationList: {[k: string]: any} = {}
 type ExplanationProps = {
     excerpt: string|null
     context: string|null
-    currentPage: string|null
+    currentSection: string|null
 }
 
-export default ({excerpt, context, currentPage}: ExplanationProps) => {
+export default ({excerpt, context, currentSection}: ExplanationProps) => {
     const [explanation, setExplanation] = useState<string[]|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -21,9 +21,9 @@ export default ({excerpt, context, currentPage}: ExplanationProps) => {
     useEffect(() => {
         if(!excerpt || !context) return
 
-        if(currentPage && currentPage in explanationList) {
-            if(excerpt in explanationList[currentPage]){
-                setExplanation([excerpt, explanationList[currentPage][excerpt]])
+        if(currentSection && currentSection in explanationList) {
+            if(excerpt in explanationList[currentSection]){
+                setExplanation([excerpt, explanationList[currentSection][excerpt]])
                 return
             }
         }
@@ -40,8 +40,8 @@ export default ({excerpt, context, currentPage}: ExplanationProps) => {
         .then(response => response.json())
             .then(response => {
                 setExplanation([excerpt, response.response])
-                if(currentPage && !explanationList[currentPage]) explanationList[currentPage] = {}
-                if(currentPage) explanationList[currentPage][excerpt] = response.response
+                if(currentSection && !explanationList[currentSection]) explanationList[currentSection] = {}
+                if(currentSection) explanationList[currentSection][excerpt] = response.response
                 setLoading(false)
             }
         ).catch(e => {
@@ -55,7 +55,6 @@ export default ({excerpt, context, currentPage}: ExplanationProps) => {
     return (
         <div className="w-1/4 p-4 absolute right-3">
             <div className="h-full p-4 text-center text-gray-700 bg-white rounded">
-
                 <div>
                     {
                         loading ? 

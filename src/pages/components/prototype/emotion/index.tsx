@@ -54,8 +54,9 @@ export default ({ context, currentPage }: backgroundProps) => {
 
     return (
     <>
-        <DefaultBackground color={"gray"}/>
-        <ImageBackground imageUrl={imageUrl} />
+        {
+            <ImageBackground imageUrl={imageUrl} />
+        }
     </>
     )
 }
