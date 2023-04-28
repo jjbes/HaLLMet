@@ -11,11 +11,16 @@ type ExplanationProps = {
     excerpt: string|null
     context: string|null
     currentSection: string|null
+    setExcerpt: Function
 }
 
-export default ({excerpt, context, currentSection}: ExplanationProps) => {
+export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps) => {
     const [explanation, setExplanation] = useState<string[]|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
+
+    const removeExplanation = () => {
+        setExcerpt(null)
+    }
 
     //Get explanation
     useEffect(() => {
@@ -50,7 +55,7 @@ export default ({excerpt, context, currentSection}: ExplanationProps) => {
 
     }, [excerpt])
 
-    if(!context || !excerpt) return <></>
+    if(!excerpt || !context) return <></>
 
     return (
         <div className="w-1/4 p-4 absolute right-3">
@@ -68,6 +73,8 @@ export default ({excerpt, context, currentSection}: ExplanationProps) => {
                     }
                 </div>
             </div>
+            <button className="absolute top-[5px] right-[5px] h-[30px] w-[30px] bg-white rounded-full p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" 
+                onClick={() => {removeExplanation()}}>✕</button>
         </div>
     )
 }

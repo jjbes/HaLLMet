@@ -53,13 +53,13 @@ html, body, #__next {
   fill:slategray;
   fill-opacity: 0.15;
   mix-blend-mode: multiply;
-  cursor: pointer;
+  /*cursor: pointer;*/
 }
-
+/*
 .highlight:hover{
   fill:darkslategray;
 }
 
 .epub-view svg{
   pointer-events: all!important;
-}
+*/

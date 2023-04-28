@@ -8,12 +8,13 @@ type ReaderProps = {
     file: Blob | MediaSource
     currentLocation:MutableRefObject<any>
     setPageContent:Function
-    setExplanation:Function
+    setExcerpt:Function
 }
 
-export default ({ file, currentLocation, setPageContent, setExplanation}: ReaderProps) => {
+export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProps) => {
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
+    const [hlLoading, setHlLoading] = useState<boolean>(false)
     const renditionRef = useRef<any>(null)
 
     const locationChanged = (epubcifi: string) => {
@@ -108,8 +109,9 @@ export default ({ file, currentLocation, setPageContent, setExplanation}: Reader
         const section = renditionRef.current.book.spine.get(start.cfi)
         if (excerptList.includes(section.canonical)) return
         excerptList.push(section.canonical)
+        setHlLoading(true)
 
-        stringToChunks(section.contents.innerText, 1500).forEach((context)=>{
+        stringToChunks(section.contents.textContent, 1500).forEach((context)=>{
             const body = JSON.stringify({ "context": context })           
 
             requestPostMethod("excerpt", body, null)
@@ -151,7 +153,7 @@ export default ({ file, currentLocation, setPageContent, setExplanation}: Reader
                                     'highlight',
                                     cfi,
                                     {},
-                                    ()=>{ setExplanation(highlight) },
+                                    ()=>{ setExcerpt(highlight) },
                                     'highlight',
                                     null
                                 )
@@ -159,11 +161,13 @@ export default ({ file, currentLocation, setPageContent, setExplanation}: Reader
                             }
                         }
                     })
+                    setHlLoading(false)
                 }
             ).catch(e => {
                 console.error('API call error :', e.name, e.message)
             })
         })
+        
     }, [location])
 
     return (
@@ -181,6 +185,17 @@ export default ({ file, currentLocation, setPageContent, setExplanation}: Reader
                     }}
                 />
             </div>
+            {
+                hlLoading ?
+                <div className='absolute top-[10px] right-0 z-50'>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div> : 
+                <></>
+            }
         </div>
+       
     )
 }

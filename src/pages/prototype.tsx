@@ -7,9 +7,9 @@ import Emotion from './components/prototype/emotion'
 export default () => {
     const [pageContent, setPageContent] = useState<string|null>()
     const [context, setContext] = useState<string|null>(null)
-    const [explanation, setExplanation] = useState<string|null>(null)
+    const [selectedExcerpt, setExcerpt] = useState<string|null>(null)
     const currentLocation = useRef<any>(null)
-    
+
     //Handle context
     useEffect(() => {      
         if(pageContent){
@@ -25,10 +25,10 @@ export default () => {
                 <EpubReader 
                     setPageContent={setPageContent} 
                     currentLocation={currentLocation}
-                    setExplanation={setExplanation}
+                    setExcerpt={setExcerpt}
                 />
             </div>
-            <Explanation context={context} excerpt={explanation} currentSection={currentLocation.current ? currentLocation.current.section : null}/>
+            <Explanation context={context} excerpt={selectedExcerpt} setExcerpt={setExcerpt} currentSection={currentLocation.current ? currentLocation.current.section : null}/>
             
         </div>
         </>
