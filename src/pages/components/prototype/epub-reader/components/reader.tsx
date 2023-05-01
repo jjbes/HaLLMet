@@ -176,6 +176,8 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
         
     }, [location, displayHighlight])
 
+    //Hide/show highlights (Bug: highlights will briefly show during 
+    //                      new section load due to how epubjs handle annotations)
     useEffect(() => {
         const highlights = document.getElementsByClassName("highlight")
         console.log(highlights)
@@ -189,7 +191,7 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
             }
         }
         
-    }, [displayHighlight])
+    }, [displayHighlight, location])
 
     return (
         <div className='h-full w-full flex flex-row relative'>
