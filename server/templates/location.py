@@ -1,5 +1,5 @@
 _LOCATION_TEMPLATE = \
-    """Instruction: Extract the main location of the context, reply none if no location
+    """Instruction: Extract the main location of the context and mood if location exists, reply none if no location
 
     EXAMPLE:'Alice was getting bored'
     Output:none

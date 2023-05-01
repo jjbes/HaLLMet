@@ -59,22 +59,25 @@ export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps
 
     return (
         <div className="w-1/4 p-4 absolute right-3">
-            <div className="h-full p-4 text-center text-gray-700 bg-white rounded">
+            <div className="relative h-full p-4 text-center text-gray-700 bg-white rounded">
+                <button className="absolute top-0 right-0 h-[30px] w-[30px] bg-white rounded-full p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" 
+                    onClick={() => {removeExplanation()}}>✕</button>
                 <div>
                     {
                         loading ? 
-                        <ExcerptLoader /> :
-                        <p className="italic text-base text-left mb-4 font-serif">{explanation? explanation[0] : null}</p>
-                    }
-                    {
-                        loading ? 
-                        <ExplanationLoader /> :
-                        <p className="text-sm text-left ">{explanation? explanation[1] : null}</p>
+                        <>
+                            <ExcerptLoader />
+                            <ExplanationLoader />
+                        </>
+                        :
+                        <>
+                            <p className="italic text-base text-left mb-4 font-serif pr-4">{explanation? explanation[0] : null}</p>
+                            <p className="text-sm text-left ">{explanation? explanation[1] : null}</p>
+                        </>
                     }
                 </div>
             </div>
-            <button className="absolute top-[5px] right-[5px] h-[30px] w-[30px] bg-white rounded-full p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" 
-                onClick={() => {removeExplanation()}}>✕</button>
+            
         </div>
     )
 }
