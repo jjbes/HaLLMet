@@ -20,6 +20,7 @@ export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps
 
     const removeExplanation = () => {
         setExcerpt(null)
+        setExplanation(null)
     }
 
     //Get explanation
@@ -48,6 +49,7 @@ export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps
                 if(currentSection && !explanationList[currentSection]) explanationList[currentSection] = {}
                 if(currentSection) explanationList[currentSection][excerpt] = response.response
                 setLoading(false)
+                setExcerpt(null)
             }
         ).catch(e => {
             console.error('API call error :', e.name, e.message)
@@ -55,7 +57,7 @@ export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps
 
     }, [excerpt])
 
-    if(!excerpt || !context) return <></>
+    if((!excerpt && !explanation) || !context) return <></>
 
     return (
         <div className="max-h-full w-1/4 overflow-auto p-4 absolute right-3">

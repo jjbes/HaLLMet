@@ -49,6 +49,12 @@ html, body, #__next {
   border-right: 0.6rem solid transparent; 
 }
 
+.filter{
+  fill:white;
+  fill-opacity: 1;
+  /*cursor: pointer;*/
+}
+
 .highlight{
   fill:slategray;
   fill-opacity: 0.15;

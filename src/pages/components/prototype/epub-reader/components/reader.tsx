@@ -1,6 +1,9 @@
 import React, { useRef, useState, useEffect, MutableRefObject } from 'react'
 import { ReactReader } from 'react-reader'
 import requestPostMethod from '../../../../api'
+import { get_encoding } from "@dqbd/tiktoken"
+import ButtonHighlight from './reader/button-highlight'
+
 
 let excerptList: string[] = []
 
@@ -8,10 +11,11 @@ type ReaderProps = {
     file: Blob | MediaSource
     currentLocation:MutableRefObject<any>
     setPageContent:Function
-    setExcerpt:Function
+    setSectionContent:Function
+    setHighlightExcerpt:Function
 }
 
-export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProps) => {
+export default ({ file, currentLocation, setPageContent, setSectionContent, setHighlightExcerpt}: ReaderProps) => {
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
@@ -21,6 +25,8 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
     const locationChanged = (epubcifi: string) => {
         setLocation(epubcifi)
     }
+
+    const flattenWhiteSpaces = (text: string) =>  text.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
 
     const findInString = (query: string, text: string) => {
         query = query.toLowerCase()
@@ -56,14 +62,39 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
         return recursor(node)
     }
 
-    const stringToChunks = (string: string, chunkSize: number) => {
-        const chunks = [];
-        while (string.length > 0) {
-            chunks.push(string.substring(0, chunkSize));
-            string = string.substring(chunkSize, string.length);
+    const splitbyChunkNumber = (string: string, chunkNumber: number) => {
+        let chunks = []
+        const enc = get_encoding("cl100k_base")
+
+        //Not perfect because chunks will be slightly different than pages
+        const encoded = enc.encode(flattenWhiteSpaces(string))
+        const chunkSize = Math.ceil(encoded.length/chunkNumber)
+
+        for(let i=0; i<encoded.length; i=i+chunkSize){
+            chunks.push(encoded.subarray(i, i+chunkSize))
         }
+        
+        chunks = chunks.map((chunk) => {
+            return new TextDecoder().decode(enc.decode(chunk))
+        })
+        enc.free()
         return chunks
     }
+
+    //Get a context window based on the current page
+    const getContextWindow = (renditionRef: MutableRefObject<any>) =>{
+        const start = renditionRef.current.currentLocation().start
+        if(!start) return
+
+        const section = renditionRef.current.book.spine.get(start.cfi)
+        const currPage = start.displayed.page - 1
+        const pageNumber = start.displayed.total
+        const chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
+        
+        const textWindow = [chunks[currPage-1], chunks[currPage], chunks[currPage+1]]
+                                .filter(Boolean).join(" ");
+        return textWindow
+    } 
 
     //Save current location
     useEffect(()=>{
@@ -97,6 +128,7 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
         const pageContent = renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' ')
         const pageContentClean = pageContent.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
         setPageContent(pageContentClean)
+        setSectionContent(getContextWindow(renditionRef))
     }, [location])
 
     //Set Highlights
@@ -113,7 +145,8 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
         if (excerptList.includes(section.canonical)) return
         excerptList.push(section.canonical)
         
-        const chunks = stringToChunks(section.contents.textContent, 1000)
+        const pageNumber = start.displayed.total
+        const chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
 
         chunks.forEach((context)=>{
             const body = JSON.stringify({ "context": context })                   
@@ -159,7 +192,7 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
                                 'highlight',
                                 cfi,
                                 {},
-                                ()=>{ setExcerpt(highlight) },
+                                ()=>{ setHighlightExcerpt(highlight) },
                                 'highlight',
                                 null
                             )
@@ -176,23 +209,6 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
         
     }, [location, displayHighlight])
 
-    //Hide/show highlights (Bug: highlights will briefly show during 
-    //                      new section load due to how epubjs handle annotations)
-    useEffect(() => {
-        const highlights = document.getElementsByClassName("highlight")
-        console.log(highlights)
-        if(!displayHighlight) {
-            for (let i = 0; i < highlights.length; i++) {
-                highlights.item(i).style.display = "none"
-            }
-        } else {
-            for (let i = 0; i < highlights.length; i++) {
-                highlights.item(i).style.display = "block"
-            }
-        }
-        
-    }, [displayHighlight, location])
-
     return (
         <div className='h-full w-full flex flex-row relative'>
             <div className='h-full w-full'>
@@ -208,22 +224,9 @@ export default ({ file, currentLocation, setPageContent, setExcerpt}: ReaderProp
                     }}
                 />
             </div>
-            <button className={(nbReqLoading>0 ? "cursor-not-allowed " : "") + (displayHighlight ? "bg-slate-200 ring ring-slate-300 ": "bg-slate-100 ring ring-slate-100 ") + "h-8 w-8 absolute top-[10px] right-[10px] z-50 flex items-center justify-center rounded"}
-                onClick={() => {
-                    if(nbReqLoading<=0){
-                        setDisplayHighlight(!displayHighlight)
-                    }
-                }}>
-            {
-                nbReqLoading>0 ?
-                <svg className="animate-spin h-full w-full text-gray p-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                : 
-                <>🖊️</>
-            }
-            </button>
+            <div className="top-[10px] right-[10px] z-50 absolute flex">
+                <ButtonHighlight nbReqLoading={nbReqLoading} displayHighlight={displayHighlight} setDisplayHighlight={setDisplayHighlight}/>
+            </div>
         </div>
        
     )
