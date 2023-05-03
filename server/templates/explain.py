@@ -1,5 +1,5 @@
 _EXPLAIN_TEMPLATE = \
-"""Instruction: You are a tool designed to explain why the sentence is important based on the following context.
+"""Instruction: You are a tool designed to explain why the excerpt is important based on the following context.
 
 EXAMPLE:'In the year 1878 I took my degree of Doctor of Medicine of University of London.'
 Output:This sentence explains the qualification of the narrator and foreshadow the character ability.

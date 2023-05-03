@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 import tiktoken
 
-from models.chatgpt import request_GPT 
+from models.chatgpt import request_GPT, request_DALLE
 from models.dreamstudio import request_dreamstudio 
 
 from templates.chatbot import _CHATBOT_TEMPLATE_NO_CONTEXT, _CHATBOT_TEMPLATE
@@ -176,7 +176,7 @@ class Explain(BaseModel):
     sentence: str
 @app.post("/explain")
 def explain(item: Explain):
-    verify_context_size(item.context)
+    verify_context_size(item.context, max_tokens=3000)
     return request_GPT(_EXPLAIN_TEMPLATE.format(context=item.context, sentence=item.sentence))
 
 """ Extract location of the context """
@@ -189,4 +189,5 @@ def location(item: Location):
     prompt = request_GPT(_LOCATION_TEMPLATE.format(context=item.context))["response"]
     if(prompt == "none"):
         return {"response": None}
+    
     return request_dreamstudio(prompt)

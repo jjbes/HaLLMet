@@ -12,3 +12,11 @@ def request_GPT(content, max_tokens=300):
         messages=[{"role": "system", "content":content}],
     )  
     return {"response": response["choices"][0]["message"]['content']}
+
+def request_DALLE(prompt):
+    response = openai.Image.create(
+        prompt=prompt,
+        n=1,
+        size="256x256",
+    )
+    return {"response": response["data"][0]["url"]}

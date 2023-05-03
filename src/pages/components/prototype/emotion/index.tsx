@@ -38,13 +38,20 @@ export default ({ context, currentPage }: backgroundProps) => {
                     setImageUrl(null)
                     return
                 }
-                
+
                 const image = new Image()
-                image.src = 'data:image/png;base64,'+response.response.artifacts[0].base64+''
-                image.decode().then(()=>{
-                    if(currentPage) backgroundList[currentPage] = image.src
-                    setImageUrl(image.src)
-                })
+                image.src = response.response
+                if (response.response.substring(0, 5) == 'data:'){
+                    image.decode().then(()=>{
+                        if(currentPage) backgroundList[currentPage] = image.src
+                        setImageUrl(image.src)
+                    })
+                }else{
+                    image.onload = ()=>{
+                        if(currentPage) backgroundList[currentPage] = image.src
+                        setImageUrl(image.src)
+                    }
+                }
             }
         ).catch(e => {
             console.error('API call error :', e.name, e.message)

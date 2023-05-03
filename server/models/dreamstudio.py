@@ -40,4 +40,4 @@ def request_dreamstudio(prompt):
     if response.status_code != 200:
         raise Exception("Non-200 response: " + str(response.text))
 
-    return {"response": response.json()}
+    return {"response": "data:image/png;base64," + response.json()["artifacts"][0]["base64"]}
