@@ -56,7 +56,7 @@ html, body, #__next {
 }
 
 .highlight{
-  fill:slategray;
+  fill:rgb(251 191 36);
   fill-opacity: 0.15;
   mix-blend-mode: multiply;
   /*cursor: pointer;*/
@@ -69,3 +69,7 @@ html, body, #__next {
 .epub-view svg{
   pointer-events: all!important;
 */
+
+.ReactModal__Overlay--after-open{
+  z-index: 99999999
+}

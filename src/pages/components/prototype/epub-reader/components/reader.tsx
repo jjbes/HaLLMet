@@ -3,7 +3,7 @@ import { ReactReader } from 'react-reader'
 import requestPostMethod from '../../../../api'
 import { get_encoding } from "@dqbd/tiktoken"
 import ButtonHighlight from './reader/button-highlight'
-
+import Modal from "../../modal/prompt-excerpt"
 
 let excerptList: string[] = []
 
@@ -19,8 +19,11 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     const [url, _] = useState(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
-    const [displayHighlight, setDisplayHighlight] = useState<boolean>(false)
+    const [displayHighlight, setDisplayHighlight] = useState<boolean>(true)
     const renditionRef = useRef<any>(null)
+
+    const [prompt, setPrompt] = useState<string>("")
+    const [promptContexts, setPromptContexts] = useState<string[]>([])
 
     const locationChanged = (epubcifi: string) => {
         setLocation(epubcifi)
@@ -147,6 +150,7 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         
         const pageNumber = start.displayed.total
         const chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
+        setPromptContexts(chunks)
 
         chunks.forEach((context)=>{
             const body = JSON.stringify({ "context": context })                   
@@ -209,6 +213,15 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         
     }, [location, displayHighlight])
 
+    useEffect(() => {
+        if(prompt) return
+        fetch('http://127.0.0.1:8000/prompt/excerpt')
+        .then(response => response.json())
+        .then(response => {
+            setPrompt(response.response)
+        })
+    })
+
     return (
         <div className='h-full w-full flex flex-row relative'>
             <div className='h-full w-full'>
@@ -227,7 +240,7 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
             <div className="top-[10px] right-[10px] z-50 absolute flex">
                 <ButtonHighlight nbReqLoading={nbReqLoading} displayHighlight={displayHighlight} setDisplayHighlight={setDisplayHighlight}/>
             </div>
-        </div>
-       
+            <Modal prompt={prompt} contexts={promptContexts}/>
+        </div>    
     )
 }

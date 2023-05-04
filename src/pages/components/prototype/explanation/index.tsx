@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import requestPostMethod from '../../../api'
 import ExcerptLoader from './components/excerpt-loader'
 import ExplanationLoader from './components/explanation-loader'
+import Modal from "../modal/prompt-explain"
 
 let explainController = new AbortController()
 
@@ -17,6 +18,7 @@ type ExplanationProps = {
 export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps) => {
     const [explanation, setExplanation] = useState<string[]|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
+    const [prompt, setPrompt] = useState<string>("")
 
     const removeExplanation = () => {
         setExcerpt(null)
@@ -57,6 +59,15 @@ export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps
 
     }, [excerpt])
 
+    useEffect(() => {
+        if(prompt) return
+        fetch('http://127.0.0.1:8000/prompt/explain')
+        .then(response => response.json())
+        .then(response => {
+            setPrompt(response.response)
+        })
+    })
+
     if((!excerpt && !explanation) || !context) return <></>
 
     return (
@@ -79,7 +90,7 @@ export default ({excerpt, context, currentSection, setExcerpt}: ExplanationProps
                     }
                 </div>
             </div>
-            
+            <Modal prompt={prompt} context={context} sentence={explanation ? explanation[0] : ""}/>
         </div>
     )
 }

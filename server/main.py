@@ -191,3 +191,13 @@ def location(item: Location):
         return {"response": None}
     
     return request_dreamstudio(prompt)
+
+@app.get("/prompt/excerpt")
+def prompt_excerpt():
+    return {"response":_EXCERPT_TEMPLATE}
+@app.get("/prompt/explain")
+def prompt_explain():
+    return {"response":_EXPLAIN_TEMPLATE}
+@app.get("/prompt/location")
+def prompt_location():
+    return {"response":_LOCATION_TEMPLATE}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import DefaultBackground from './components/default'
 import ImageBackground from './components/image'
+import Modal from "../modal/prompt-location"
 
 import requestPostMethod from '../../../api'
 
@@ -14,6 +15,7 @@ type backgroundProps = {
 }
 export default ({ context, currentPage }: backgroundProps) => {
     const [imageUrl, setImageUrl] = useState<string|null>(null)
+    const [prompt, setPrompt] = useState<string>("")
 
     //Get emotion
     useEffect(() => {
@@ -59,11 +61,19 @@ export default ({ context, currentPage }: backgroundProps) => {
 
     }, [context])
 
+    useEffect(() => {
+        if(prompt) return
+        fetch('http://127.0.0.1:8000/prompt/location')
+        .then(response => response.json())
+        .then(response => {
+            setPrompt(response.response)
+        })
+    })
+
     return (
     <>
-        {
-            <ImageBackground imageUrl={imageUrl} />
-        }
+        <ImageBackground imageUrl={imageUrl} />
+        <Modal prompt={prompt} context={context}/>
     </>
     )
 }

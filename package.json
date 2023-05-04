@@ -23,6 +23,7 @@
     "react-content-loader": "^6.2.1",
     "react-dom": "18.2.0",
     "react-graph-vis": "^1.0.7",
+    "react-modal": "^3.16.1",
     "react-reader": "^1.2.1",
     "tailwindcss": "3.3.1",
     "typescript": "5.0.4"
