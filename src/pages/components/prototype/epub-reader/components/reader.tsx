@@ -96,7 +96,7 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         const chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
         
         const textWindow = [chunks[currPage-1], chunks[currPage], chunks[currPage+1]]
-                                .filter(Boolean).join(" ");
+                                .filter(Boolean).join(" ")
         return textWindow
     } 
 
@@ -128,7 +128,7 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         const baseCfi = splitCfi[0] + '/' + splitCfi[1] + '/' + splitCfi[2] + '/' + splitCfi[3]
         const startCfi = start.cfi.replace(baseCfi, '')
         const endCfi = end.cfi.replace(baseCfi, '')
-        const rangeCfi = [baseCfi, startCfi, endCfi].join(',');
+        const rangeCfi = [baseCfi, startCfi, endCfi].join(',')
         const pageContent = renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' ')
         const pageContentClean = pageContent.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
         setPageContent(pageContentClean)
@@ -138,21 +138,25 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     //Set Highlights
     useEffect(() => {
         if(!displayHighlight) return
-
         if(!location) return
         if(!location.includes("epubcfi")) return
-
         const start = renditionRef.current.currentLocation().start
         if(!start) return
 
+        //Handling large sections. LIMITATIONS: Cannot get proper page content yet
+        const maxChunksProcessing = 10 //Number of chunks to load at the same time
         const section = renditionRef.current.book.spine.get(start.cfi)
-        if (excerptList.includes(section.canonical)) return
-        excerptList.push(section.canonical)
-        
+        const currPageNumber = start.displayed.page - 1
         const pageNumber = start.displayed.total
-        const chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
+        const currChunksGroup = Math.floor(currPageNumber/maxChunksProcessing)
+        let chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
+        chunks = chunks.slice(currChunksGroup*maxChunksProcessing, Math.min(currChunksGroup*maxChunksProcessing+maxChunksProcessing, pageNumber))
         setPromptContexts(chunks)
 
+        //No API call if the highlights are already loaded
+        if (excerptList.includes(section.canonical+currChunksGroup)) return
+        excerptList.push(section.canonical+currChunksGroup)
+                
         chunks.forEach((context)=>{
             const body = JSON.stringify({ "context": context })                   
             
