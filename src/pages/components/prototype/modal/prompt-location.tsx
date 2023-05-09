@@ -30,13 +30,13 @@ export default ({prompt, context}: ModalProps) => {
             <div className="relative h-full pt-4 flex flex-row">
                 <div className='h-full w-1/2'>
                     <div className='mb-2'>Prompt</div>
-                    <div className="h-[calc(100%-24px)] text-sm p-4 font-mono text-left text-gray-700 whitespace-pre-wrap overflow-auto bg-slate-100 rounded">
+                    <div className="h-[calc(100%-24px)] text-sm p-4 font-mono text-left text-white whitespace-pre-wrap overflow-auto bg-slate-800 rounded">
                         {prompt}
                     </div> 
                 </div>
                 <div className='h-full w-1/2 ml-4'>
                     <div className='mb-2'>Context</div>
-                    <div className="h-[calc(100%-24px)] text-sm p-4 font-serif text-left text-gray-700 whitespace-pre-wrap overflow-auto bg-slate-100 rounded">
+                    <div className="h-[calc(100%-24px)] text-sm tracking-wide p-4 font-serif text-left text-gray-700 whitespace-pre-wrap overflow-auto bg-slate-100 rounded">
                         {context?context:"empty context"}
                     </div>  
                 </div>

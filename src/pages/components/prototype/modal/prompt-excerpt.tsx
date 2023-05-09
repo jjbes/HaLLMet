@@ -11,7 +11,7 @@ const Accordion = ({ title, content }: AccordionProps) => {
 
   return (
     <div className="hover:bg-gray-200 bg-gray-100 mb-2 rounded-sm p-2">
-    <div className="text-sm p-2 flex flex-row text-black font-bold cursor-pointer" onClick={() => setActive(!isActive)}>
+    <div className="text-sm font-mono p-2 flex flex-row text-black font-bold cursor-pointer" onClick={() => setActive(!isActive)}>
         <div className="w-full text-left">{title}</div>
         <div className="w-8 flex justify-end items-center">{isActive ? '▲' : '▼'}</div>
     </div>
@@ -49,13 +49,13 @@ export default ({prompt, contexts}: ModalProps) => {
             <div className="relative h-full pt-4 flex flex-row">
                 <div className='h-full w-1/2'>
                     <div className='mb-2'>Prompt</div>
-                    <div className="h-[calc(100%-24px)] p-4 text-sm font-mono text-left text-gray-700 whitespace-pre-wrap overflow-auto bg-slate-100 rounded">
+                    <div className="h-[calc(100%-24px)] p-4 text-sm font-mono text-left text-white whitespace-pre-wrap overflow-auto bg-slate-800 rounded">
                         {prompt}
                     </div> 
                 </div>
                 <div className='h-full w-1/2 ml-4'>
                     <div className='mb-2'>Context</div>
-                    <div className="h-[calc(100%-24px)] p-4 text-sm font-serif text-left text-gray-700 whitespace-pre-wrap overflow-auto bg-slate-100 rounded">
+                    <div className="h-[calc(100%-24px)] p-4 text-sm tracking-wide font-serif text-left text-gray-700 whitespace-pre-wrap overflow-auto bg-slate-100 rounded">
                         {
                             contexts.length>0?
                             contexts.map((context: string, i: number) => {
