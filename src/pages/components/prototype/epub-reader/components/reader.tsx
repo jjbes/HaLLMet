@@ -16,11 +16,12 @@ type ReaderProps = {
 }
 
 export default ({ file, currentLocation, setPageContent, setSectionContent, setHighlightExcerpt}: ReaderProps) => {
-    const [url, _] = useState(URL.createObjectURL(file))
+    const url = useRef(URL.createObjectURL(file))
     const [location, setLocation] = useState<string>("0")
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
     const [displayHighlight, setDisplayHighlight] = useState<boolean>(true)
     const renditionRef = useRef<any>(null)
+    const [annotations, _] = useState<any>({})
 
     const [prompt, setPrompt] = useState<string>("")
     const [promptContexts, setPromptContexts] = useState<string[]>([])
@@ -213,6 +214,30 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         
     }, [location, displayHighlight])
 
+    //Show/Hide higlights
+    useEffect(() => {
+        if(!renditionRef.current) return
+        if(!displayHighlight){
+            Object.keys(renditionRef.current.annotations._annotations).forEach(key=>{
+                const annotation = renditionRef.current.annotations._annotations[key]
+                annotations[key] = renditionRef.current.annotations._annotations[key]
+                renditionRef.current.annotations.remove(annotation.cfiRange, annotation.type)
+            })
+        } else {
+            Object.keys(annotations).forEach(key=>{
+                const annotation = annotations[key]
+                renditionRef.current.annotations.add(
+                    annotation.type,
+                    annotation.cfiRange,
+                    annotation.data,
+                    annotation.cb,
+                    annotation.className,
+                    annotation.styles
+                )
+            })
+        }        
+    }, [displayHighlight])
+
     useEffect(() => {
         if(prompt) return
         fetch('http://127.0.0.1:8000/prompt/excerpt')
@@ -228,7 +253,7 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
                 <ReactReader
                     location={location}
                     locationChanged={locationChanged}
-                    url={url}
+                    url={url.current}
                     epubInitOptions={{
                         openAs: 'epub'
                     }}

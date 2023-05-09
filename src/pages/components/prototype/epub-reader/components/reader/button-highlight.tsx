@@ -1,27 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 type DefaultBackgroundProps = {
     nbReqLoading: number,
     displayHighlight: boolean,
     setDisplayHighlight: Function
 }
-export default ({ displayHighlight, nbReqLoading, setDisplayHighlight }: DefaultBackgroundProps) => {
-    //Hide/show highlights (Bug: highlights will briefly show during 
-    //                      new section load due to how epubjs handle annotations)
-    useEffect(() => {
-        const highlights = document.getElementsByClassName("highlight")
-        if(!displayHighlight) {
-            for (let i = 0; i < highlights.length; i++) {
-                highlights.item(i).style.display = "none"
-            }
-        } else {
-            for (let i = 0; i < highlights.length; i++) {
-                highlights.item(i).style.display = "block"
-            }
-        }
-        
-    }, [displayHighlight, location])
-    
+export default ({ displayHighlight, nbReqLoading, setDisplayHighlight }: DefaultBackgroundProps) => {    
     return (
         <button className={(nbReqLoading>0 ? "cursor-not-allowed " : "") + (displayHighlight ? "bg-yellow-200 ring ring-yellow-300 hover:bg-yellow-300 ": "bg-slate-100 ring ring-slate-100 hover:bg-slate-200 ") + "h-8 w-8 ml-[14px] flex items-center justify-center rounded"}
                 onClick={() => {

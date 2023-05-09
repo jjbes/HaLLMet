@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import DefaultBackground from './components/default'
 import ImageBackground from './components/image'
 import Modal from "../modal/prompt-location"
 
@@ -23,13 +22,13 @@ export default ({ context, currentPage }: backgroundProps) => {
         
         if(!context) return
 
+        if (emotionController) emotionController.abort()
+        emotionController = new AbortController()
+
         if(currentPage && currentPage in backgroundList) {
             setImageUrl(backgroundList[currentPage])
             return
         }
-
-        if (emotionController) emotionController.abort()
-        emotionController = new AbortController()
 
         const body = JSON.stringify({ "context": context })
         requestPostMethod("location", body, emotionController)
