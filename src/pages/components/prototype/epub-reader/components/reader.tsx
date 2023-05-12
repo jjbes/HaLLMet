@@ -40,20 +40,19 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     const flattenWhiteSpaces = (text: string) =>  text.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
 
     const findInString = (query: string, text: string) => {
-        let _query = query.toLowerCase()
-        let _text = text.toLowerCase()
-        _query = _query.replaceAll(',','_').replaceAll('.','_').replaceAll(';','_').replaceAll(':','_')
-        _text = _text.replaceAll(',','_').replaceAll('.','_').replaceAll(';','_').replaceAll(':','_')
-        _query = _query.replaceAll("“", '\"').replaceAll("”", '\"')
-        _text = _text.replaceAll("“", '\"').replaceAll("”", '\"')
-        _query = _query.replaceAll('’', '\'')
-        _text = _text.replaceAll('’', '\'')
-        _query = _query.replace(/\s/g,' ')
-        _text = _text.replace(/\s/g,' ')
-        return _text.indexOf(_query)
+        //Replace all special characters to prevent errors between characters such as “|"
+        //or ? characters in regex
+        const specialChars = /[^\w&^\s]/gm
+        query = query.replace(specialChars, "_")
+        text = text.replace(specialChars, "_")
+        //Replace the query spaces by \s* to match whitespace-independant patterns.
+        const re = new RegExp(query.replace(/\s/g,'\\s*'), "gmi")
+        const match = re.exec(text) //Only one match, could be multiple
+        return match ? match.index : -1
     }
     
     const searchInNestedNodes = (node: Node, target: number) => {
+        //TODO: Fix whitespace in calcultations
         const recursor = (node: Node) => {
             let a: any[] = []
             if(target<0){
