@@ -26,6 +26,13 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     const [prompt, setPrompt] = useState<string>("")
     const [promptContexts, setPromptContexts] = useState<string[]>([])
 
+    const getExcerpt = async (context: string) => {
+        const body = JSON.stringify({ "context": context })
+        return requestPostMethod("excerpt", body, null)
+            .then(response => response.json())
+            .then(response => response.response)
+    }
+
     const locationChanged = (epubcifi: string) => {
         setLocation(epubcifi)
     }
@@ -33,17 +40,17 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     const flattenWhiteSpaces = (text: string) =>  text.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
 
     const findInString = (query: string, text: string) => {
-        query = query.toLowerCase()
-        text = text.toLowerCase()
-        query = query.replace(/\s/g,' ')
-        text = text.replace(/\s/g,' ')
-        query = query.replaceAll("“", ' ').replaceAll("”", ' ').replaceAll('"', ' ')
-        text = text.replaceAll("“", ' ').replaceAll("”", ' ').replaceAll('"', ' ')
-        if(text.indexOf(query) == -1){
-            query = query.replace(/\s{2,}/g, ' ')
-            text = text.replace(/\s{2,}/g, ' ')
-        }
-        return text.indexOf(query)
+        let _query = query.toLowerCase()
+        let _text = text.toLowerCase()
+        _query = _query.replaceAll(',','_').replaceAll('.','_').replaceAll(';','_').replaceAll(':','_')
+        _text = _text.replaceAll(',','_').replaceAll('.','_').replaceAll(';','_').replaceAll(':','_')
+        _query = _query.replaceAll("“", '\"').replaceAll("”", '\"')
+        _text = _text.replaceAll("“", '\"').replaceAll("”", '\"')
+        _query = _query.replaceAll('’', '\'')
+        _text = _text.replaceAll('’', '\'')
+        _query = _query.replace(/\s/g,' ')
+        _text = _text.replace(/\s/g,' ')
+        return _text.indexOf(_query)
     }
     
     const searchInNestedNodes = (node: Node, target: number) => {
@@ -158,16 +165,32 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         excerptList.push(section.canonical+currChunksGroup)
                 
         chunks.forEach((context)=>{
-            const body = JSON.stringify({ "context": context })                   
-            
+            if(context.length < 10) return              
             setNbReqLoading((val) => val + 1)
 
-            requestPostMethod("excerpt", body, null)
-            .then(response => response.json())
-            .then(response => {
-                const highlights = response.response.split("|")
-                
+            const highlight = async () => {
+                const excerpts = await getExcerpt(context)
+                .finally(()=>{
+                    setNbReqLoading((val) => val - 1)
+                })
+                .catch(e => {
+                    console.error('API call error :', e.name, e.message)
+                })
+                if(!excerpts) return
+
+                excerpts.replace(/(\d.\s)/g, "|")
+                .replaceAll("\n", '')
+                .split("|")
+
+                const highlights = excerpts.replace(/(\d.\s)/g, "|")
+                                    .replaceAll("\n", '')
+                                    .split("|")
+
                 highlights.forEach((highlight: string) => {
+                    if(!highlight) return
+                    //Remove trailing spaces and quotes
+                    highlight = highlight.trim().replace(/^"(.*)"$/, '$1')
+                    
                     let paragraphs = section.contents.children[1].childNodes
                     
                     for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
@@ -209,11 +232,8 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
                         }
                     }
                 })
-            }).finally(()=>{
-                setNbReqLoading((val) => val - 1)
-            }).catch(e => {
-                console.error('API call error :', e.name, e.message)
-            })
+            }
+            highlight()
         })
         
     }, [location, displayHighlight])

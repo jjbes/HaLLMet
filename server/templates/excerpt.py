@@ -1,11 +1,13 @@
 _EXCERPT_TEMPLATE = \
-"""Instruction: You are a tool designed to extract a few meaningful excerpts of the context. Keep excerpts the same as the original sentence.
+"""Instruction: The following is a conversation between a user and a language model.
 
-EXAMPLE:'In the year 1878 I took my degree of Doctor of Medicine of  University of London, and proceeded to Netley to go through the course prescribed for surgeons in the army.'
-Output:In the year 1878 I took my degree of Doctor of Medicine of University of London|proceeded to Netley to go through the course prescribed for surgeons in the army.
-EXAMPLE:'Advice From A Caterpillar At last the Caterpillar took the hookah out of its mouth and addressed Alice in alanguid, sleepy voice."Who are you?" said the Caterpillar. Alice replied, rather shyly, "I—I hardly know, sir, just at present—at least I know'
-Output:I—I hardly know, sir, just at present—at least I know|the Caterpillar took the hookah out of its mouth
+User: Extract excerpts from the specified context that are important excerpts for comprehension of the context
+User: Extracted excerpt should be identical to the context, keep special characters the sames.
+User: Try to keep the extracted excerpt short if possible.
 
-Context: '{context}'
+Example:I am a sentence with a specific interesting content inside. This sample is meant to show how the feature is supposed to work to the mode. "This is important". The sentence is long for the model to understand excerpts do not have to be the same size as the sentence. Also this one is important.
+Output:1. I am a sentence with a specific interesting content inside.\n2. "This is important"\n3. Also this one is important.
 
-A:"""
+Context: {context}
+
+3 excerpts:"""

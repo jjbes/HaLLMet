@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pydantic import BaseModel
 import tiktoken
+import re
 
 from models.chatgpt import request_GPT, request_DALLE
 from models.dreamstudio import request_dreamstudio 
@@ -186,11 +187,17 @@ class Location(BaseModel):
 def location(item: Location):
     verify_context_size(item.context)
 
-    prompt = request_GPT(_LOCATION_TEMPLATE.format(context=item.context))["response"]
-    if(prompt == "none"):
+    response = request_GPT(_LOCATION_TEMPLATE.format(context=item.context))
+    if(response["response"] == "none"):
         return {"response": None}
-    
-    return request_dreamstudio(prompt)
+    return response
+
+""" Generate background out of a location"""
+class Background(BaseModel):
+    location: str
+@app.post("/background")
+def background(item: Background):  
+    return request_dreamstudio("fantasy " + item.location)
 
 @app.get("/prompt/excerpt")
 def prompt_excerpt():

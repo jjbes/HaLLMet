@@ -4,7 +4,8 @@ import Modal from "../modal/prompt-location"
 
 import requestPostMethod from '../../../api'
 
-let emotionController = new AbortController()
+let locationController = new AbortController()
+let backgroundController = new AbortController()
 
 let backgroundList: {[k: string]: string|null} = {}
 
@@ -16,48 +17,72 @@ export default ({ context, currentPage }: backgroundProps) => {
     const [imageUrl, setImageUrl] = useState<string|null>(null)
     const [prompt, setPrompt] = useState<string>("")
 
+    const getLocation = async (context: string) => {
+        if (locationController) locationController.abort()
+        locationController = new AbortController()
+
+        const body = JSON.stringify({ "context": context })
+        return requestPostMethod("location", body, locationController)
+        .then(response => response.json())
+        .then(response => response["response"])
+    }
+
+    const getBackground = async (location: string) => {
+        if (backgroundController) backgroundController.abort()
+            backgroundController = new AbortController()
+
+        const body = JSON.stringify({ "location": location })
+        return requestPostMethod("background", body, backgroundController)
+        .then(response => response.json())
+        .then(response => response["response"])
+    }
+
     //Get emotion
     useEffect(() => {
         setImageUrl(null)
         
         if(!context) return
 
-        if (emotionController) emotionController.abort()
-        emotionController = new AbortController()
-
         if(currentPage && currentPage in backgroundList) {
             setImageUrl(backgroundList[currentPage])
             return
         }
 
-        const body = JSON.stringify({ "context": context })
-        requestPostMethod("location", body, emotionController)
-        .then(response => response.json())
-            .then(response => {
-                if(!response.response){
-                    if(currentPage) backgroundList[currentPage] = null
-                    setImageUrl(null)
-                    return
-                }
+        (async () => {
+            const location = await getLocation(context)
+            .catch(e => {
+                console.error('API call error :', e.name, e.message)
+            })
+            if(!location) {
+                if(currentPage) backgroundList[currentPage] = null
+                setImageUrl(null)
+                return
+            }
 
-                const image = new Image()
-                image.src = response.response
-                if (response.response.substring(0, 5) == 'data:'){
-                    image.decode().then(()=>{
-                        if(currentPage) backgroundList[currentPage] = image.src
-                        setImageUrl(image.src)
-                    })
-                }else{
-                    image.onload = ()=>{
-                        if(currentPage) backgroundList[currentPage] = image.src
-                        setImageUrl(image.src)
-                    }
+            const background = await getBackground(location)
+            .catch(e => {
+                console.error('API call error :', e.name, e.message)
+            })
+            if (!background) {
+                if(currentPage) backgroundList[currentPage] = null
+                setImageUrl(null)
+                return
+            }
+
+            const image = new Image()
+            image.src = background
+            if (background.substring(0, 5) == 'data:'){
+                image.decode().then(()=>{
+                    if(currentPage) backgroundList[currentPage] = image.src
+                    setImageUrl(image.src)
+                })
+            }else{
+                image.onload = ()=>{
+                    if(currentPage) backgroundList[currentPage] = image.src
+                    setImageUrl(image.src)
                 }
             }
-        ).catch(e => {
-            console.error('API call error :', e.name, e.message)
-        })
-
+        })()
     }, [context])
 
     useEffect(() => {
