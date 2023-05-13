@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import ImageBackground from './components/image'
 import Modal from "./components/modal-location"
 
-let locationController = new AbortController()
-let backgroundController = new AbortController()
+let locationController: AbortController
+let backgroundController: AbortController
 
 let backgroundList: {[k: string]: string|null} = {}
 

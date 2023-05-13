@@ -1,70 +1,69 @@
 import React, { useState, useEffect } from 'react'
 import TextLoader from './text-loader'
 
-let contextualList: {[k: string]: Map<number, string>} = {}
+let contextualList: {[k: string]: Map<number, string|null>} = {}
 
 type ContextualizationProps = {
     context:string
-    highlights:Object
+    highlights:Array<string>
     section:string
     index:number
 }
 export default ({ context, highlights, section, index }: ContextualizationProps) => {
     const [contextualization, setContextualization] = useState<string|null>(null)
-    const [loading, setLoading] = useState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(false)
     const [apiError, setApiError] = useState<boolean>(false)
     const [dataError, setDataError] = useState<boolean>(false)
 
-    const getContexualizations = () =>{
-        const highlightsStr = Object.entries(highlights).map((entry)=>{
-            return entry[1].content
-        }).join('\n')
-
-        ;(async () => {
-            contextualList[section].set(index, "")
-            return fetch("http://127.0.0.1:8000/contextualize", {
-                method : "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body : JSON.stringify({ "context": context, "sentence": highlightsStr })
-            })
-            .then(response => response.json())
-            .then(response => {
-                setContextualization(response.response)
-                contextualList[section].set(index, response.response)
-            })
-            .finally(()=> {
-                setLoading(false)
-            })
-            .catch(e => {
-                console.error('API call error :', e.name, e.message)
-                setApiError(true)
-                setLoading(false)
-            })      
-        })()
+    const requestContexualizations = async () =>{
+        contextualList[section].set(index, "")
+        return fetch("http://127.0.0.1:8000/contextualize", {
+            method : "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body : JSON.stringify({ "context": context, "sentence": highlights.join('\n') })
+        })
+        .then(response => response.json())
+        .then(response => {
+            setContextualization(response.response)
+            contextualList[section].set(index, response.response)
+        })
+        .finally(()=> {
+            setLoading(false)
+        })
+        .catch(e => {
+            console.error('API call error :', e.name, e.message)
+            setApiError(true)
+            setLoading(false)
+            contextualList[section].set(index, null)
+        })      
     }
 
     const retry = () => {
+        if(!apiError && !dataError) return
         setApiError(false)
         setDataError(false)
         setLoading(true)
-        getContexualizations()
+        requestContexualizations()
     }
 
     useEffect(() => {
         if (!contextualList[section]) contextualList[section] = new Map()
+        console.log(contextualList[section])
+        console.log(index, contextualList[section].has(index))
         if(contextualList[section].has(index)) {
-            setContextualization(contextualList[section].get(index)??"")
-            return
+            if(contextualList[section].get(index) == null){
+                setDataError(true)
+                return
+            }
+            setContextualization(contextualList[section].get(index)??null)
+        } else {
+            setLoading(true)
+            requestContexualizations()
         }
-        getContexualizations()
     })
-
-    useEffect(() => {
-        if(!contextualization && !loading) setDataError(true)
-    },[loading])
 
     if(apiError || dataError) return (
         <div 

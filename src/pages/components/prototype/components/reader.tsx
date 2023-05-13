@@ -1,3 +1,5 @@
+//TODO: Allow failed excerpts request to be retried
+
 import React, { useRef, useState, useEffect } from 'react'
 import { ReactReader } from 'react-reader'
 import { get_encoding } from "@dqbd/tiktoken"
@@ -129,6 +131,8 @@ export default ({file}: ReaderProps) => {
         const pageContent = renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' ')
         const pageContentClean = pageContent.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
         setPageContent(pageContentClean)
+        console.log(start.displayed.page)
+        document.getElementById(`page-${start.displayed.page}`)?.scrollIntoView()
     }, [location])
 
     //Set Highlights
@@ -175,11 +179,11 @@ export default ({file}: ReaderProps) => {
                 .replaceAll("\n", '')
                 .split("|")
 
-                const highlights = excerpts.replace(/(\d.\s)/g, "|")
+                const chunkHighlights = excerpts.replace(/(\d.\s)/g, "|")
                                     .replaceAll("\n", '')
                                     .split("|")
 
-                highlights.forEach((highlight: string) => {
+                chunkHighlights.forEach((highlight: string, highlightIndex:number) => {
                     if(!highlight) return
                     //Remove trailing spaces and quotes
                     highlight = highlight.trim().replace(/^"(.*)"$/, '$1')
@@ -222,16 +226,46 @@ export default ({file}: ReaderProps) => {
                                 null
                             )
                             
-                            setHighlights((highlights: any) => ({
+                            /*setHighlights((highlights: any) => ({
                                 ...highlights,
                                 [highlight]: {
+                                    section:section.canonical,
                                     index:indexChunk,
-                                    section:section.canonical, 
                                     content:highlight, 
                                     href:cfi,
                                 }
-                            }))
+                            }))*/
 
+                            /* Highlights follow this object format:
+                            Object {
+                                "/OEBPS/6600632123799531513_11-h-0.htm.xhtml": Object {
+                                    0: Object { 
+                                        0: Object { 
+                                            content: "Content 1", href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:1,/1:155)" 
+                                        }
+                                        1: Object { 
+                                            content: "Content 2", 
+                                            href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:156,/3:1)" 
+                                        }
+                                    },
+                                    1: Object{...}
+                                }
+                                "/OEBPS/6600632123799531513_11-h-1.htm.xhtml": {…}
+                            }
+                            */
+                            setHighlights((highlights: any) => ({
+                                ...highlights,
+                                [section.canonical]: {
+                                    ...highlights[section.canonical],
+                                    [indexChunk]: {
+                                        ...(highlights[section.canonical]?highlights[section.canonical][indexChunk] : {}),
+                                        [highlightIndex]: {
+                                            content:highlight,
+                                            href:cfi,
+                                        }
+                                    }
+                                }
+                            }))
                             break
                         }
                     }
