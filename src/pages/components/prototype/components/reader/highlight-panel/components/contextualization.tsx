@@ -51,8 +51,6 @@ export default ({ context, highlights, section, index }: ContextualizationProps)
 
     useEffect(() => {
         if (!contextualList[section]) contextualList[section] = new Map()
-        console.log(contextualList[section])
-        console.log(index, contextualList[section].has(index))
         if(contextualList[section].has(index)) {
             if(contextualList[section].get(index) == null){
                 setDataError(true)
