@@ -4,6 +4,7 @@ import requestPostMethod from '../../../../api'
 import { get_encoding } from "@dqbd/tiktoken"
 import ButtonHighlight from './reader/button-highlight'
 import Modal from "../../modal/prompt-excerpt"
+import HighlightPanel from './reader/highlight-panel'
 
 let excerptList: string[] = []
 
@@ -11,20 +12,26 @@ type ReaderProps = {
     file: Blob | MediaSource
     currentLocation:MutableRefObject<any>
     setPageContent:Function
-    setSectionContent:Function
-    setHighlightExcerpt:Function
 }
 
-export default ({ file, currentLocation, setPageContent, setSectionContent, setHighlightExcerpt}: ReaderProps) => {
+export default ({ 
+    file, 
+    currentLocation, 
+    setPageContent
+}: ReaderProps) => {
     const url = useRef(URL.createObjectURL(file))
+    const renditionRef = useRef<any>(null)
+
+    const [section, setSection] = useState<string|null>(null)
     const [location, setLocation] = useState<string>("0")
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
     const [displayHighlight, setDisplayHighlight] = useState<boolean>(true)
-    const renditionRef = useRef<any>(null)
     const [annotations, _] = useState<any>({})
-
     const [prompt, setPrompt] = useState<string>("")
     const [promptContexts, setPromptContexts] = useState<string[]>([])
+    const [highlights, setHighlights] = useState<Object>({})
+    const [sectionContexts, setSectionContexts] = useState<Object>({})
+    const [highlightedCfi, setHighlightedCfi] = useState<string|null>(null)
 
     const getExcerpt = async (context: string) => {
         const body = JSON.stringify({ "context": context })
@@ -106,30 +113,28 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         return textWindow
     } 
 
-    //Save current location
-    useEffect(()=>{
+    const highlightCfi = async (cfiRange:string) => {
+        setHighlightedCfi(cfiRange)
+        document.getElementById(cfiRange)?.scrollIntoView()
+    }
+
+    //Save current location, set section and page content
+    useEffect(() => {
         if(!location) return
         if(!location.includes("epubcfi")) return
-
         const start = renditionRef.current.currentLocation().start
-        if(!start) return
+        const end = renditionRef.current.currentLocation().end
+        if(!start || !end) return
         const section = renditionRef.current.book.spine.get(start.cfi)
-        
+
+        //Save location
         currentLocation.current = {
             section:section.canonical,
             page:location
         }
-    }, [location])
-
-    //Get current page content
-    useEffect(() => {
-        if(!location) return
-        if(!location.includes("epubcfi")) return
-
-        const start = renditionRef.current.currentLocation().start
-        const end = renditionRef.current.currentLocation().end
-        if(!start || !end) return
-        
+        //Set current section
+        setSection(section.canonical)
+        //Get page content
         const splitCfi = start.cfi.split('/')
         const baseCfi = splitCfi[0] + '/' + splitCfi[1] + '/' + splitCfi[2] + '/' + splitCfi[3]
         const startCfi = start.cfi.replace(baseCfi, '')
@@ -138,7 +143,6 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         const pageContent = renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' ')
         const pageContentClean = pageContent.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
         setPageContent(pageContentClean)
-        setSectionContent(getContextWindow(renditionRef))
     }, [location])
 
     //Set Highlights
@@ -158,16 +162,21 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
         let chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
         chunks = chunks.slice(currChunksGroup*maxChunksProcessing, Math.min(currChunksGroup*maxChunksProcessing+maxChunksProcessing, pageNumber))
         setPromptContexts(chunks)
+        setSectionContexts((sectionContext: any) => ({
+            ...sectionContext,
+            [section.canonical]: chunks
+        }))
+
 
         //No API call if the highlights are already loaded
         if (excerptList.includes(section.canonical+currChunksGroup)) return
         excerptList.push(section.canonical+currChunksGroup)
                 
-        chunks.forEach((context)=>{
+        chunks.forEach((context:string, indexChunk:number)=>{
             if(context.length < 10) return              
             setNbReqLoading((val) => val + 1)
 
-            const highlight = async () => {
+            ;(async () => {
                 const excerpts = await getExcerpt(context)
                 .finally(()=>{
                     setNbReqLoading((val) => val - 1)
@@ -223,16 +232,28 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
                                 'highlight',
                                 cfi,
                                 {},
-                                ()=>{ setHighlightExcerpt(highlight) },
+                                ()=>{ highlightCfi(cfi) },
                                 'highlight',
                                 null
                             )
+                            
+                            setHighlights((highlights: any) => ({
+                                ...highlights,
+                                [highlight]: {
+                                    index:indexChunk,
+                                    section:section.canonical, 
+                                    content:highlight, 
+                                    href:cfi,
+                                }
+                            }))
+
                             break
                         }
                     }
                 })
-            }
-            highlight()
+            })()
+
+            
         })
         
     }, [location, displayHighlight])
@@ -262,6 +283,31 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     }, [displayHighlight])
 
     useEffect(() => {
+        if(!highlightedCfi) return
+        if(!renditionRef.current) return
+        renditionRef.current.display(highlightedCfi)
+
+        if(displayHighlight){
+            Object.keys(renditionRef.current.annotations._annotations).forEach(key=>{
+                const annotation = renditionRef.current.annotations._annotations[key]
+                annotations[key] = renditionRef.current.annotations._annotations[key]
+                renditionRef.current.annotations.remove(annotation.cfiRange, annotation.type)
+            })
+            Object.keys(annotations).forEach(key=>{
+                const annotation = annotations[key]
+                renditionRef.current.annotations.add(
+                    annotation.type,
+                    annotation.cfiRange,
+                    annotation.data,
+                    annotation.cb,
+                    highlightedCfi == annotation.cfiRange ? "highlighted":"highlight",
+                    annotation.styles
+                )
+            })
+        }
+    }, [highlightedCfi])
+
+    useEffect(() => {
         if(prompt) return
         fetch('http://127.0.0.1:8000/prompt/excerpt')
         .then(response => response.json())
@@ -271,24 +317,38 @@ export default ({ file, currentLocation, setPageContent, setSectionContent, setH
     })
 
     return (
-        <div className='h-full w-full flex flex-row relative'>
-            <div className='h-full w-full'>
-                <ReactReader
-                    location={location}
-                    locationChanged={locationChanged}
-                    url={url.current}
-                    epubInitOptions={{
-                        openAs: 'epub'
-                    }}
-                    getRendition={rendition => {
-                        renditionRef.current = rendition
-                    }}
-                />
+        <div className='h-full w-full flex'>
+            <div className='h-full w-7/12 flex flex-row relative'>
+                <div className='h-full w-full'>
+                    <ReactReader
+                        location={location}
+                        locationChanged={locationChanged}
+                        url={url.current}
+                        epubInitOptions={{
+                            openAs: 'epub'
+                        }}
+                        getRendition={rendition => {
+                            renditionRef.current = rendition
+                        }}
+                    />
+                </div>
+                <div className="top-[10px] right-[10px] z-50 absolute flex">
+                    <ButtonHighlight 
+                        nbReqLoading={nbReqLoading} 
+                        displayHighlight={displayHighlight} 
+                        setDisplayHighlight={setDisplayHighlight}/>
+                </div>
+                <Modal prompt={prompt} contexts={promptContexts}/>
             </div>
-            <div className="top-[10px] right-[10px] z-50 absolute flex">
-                <ButtonHighlight nbReqLoading={nbReqLoading} displayHighlight={displayHighlight} setDisplayHighlight={setDisplayHighlight}/>
+            <div className='h-full w-5/12 ml-8 bg-white'>
+                <HighlightPanel 
+                    section={section?section:''} 
+                    sectionContexts={sectionContexts} 
+                    highlights={highlights}
+                    highlightedCfi={highlightedCfi}
+                    setHighlightedCfi={setHighlightedCfi}/>
             </div>
-            <Modal prompt={prompt} contexts={promptContexts}/>
-        </div>    
+        </div>
+            
     )
 }

@@ -56,19 +56,15 @@ html, body, #__next {
 }
 
 .highlight{
+  fill:rgb(148 163 184);
+  fill-opacity: 0.15;
+  mix-blend-mode: multiply;
+}
+.highlighted{
   fill:rgb(251 191 36);
   fill-opacity: 0.15;
   mix-blend-mode: multiply;
-  /*cursor: pointer;*/
 }
-/*
-.highlight:hover{
-  fill:darkslategray;
-}
-
-.epub-view svg{
-  pointer-events: all!important;
-*/
 
 .ReactModal__Overlay--after-open{
   z-index: 99999999

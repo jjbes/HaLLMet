@@ -5,10 +5,11 @@ import Uploader from './components/uploader'
 type EpubHighLightProps = {
     currentLocation: MutableRefObject<any>
     setPageContent:Function
-    setSectionContent:Function
-    setHighlightExcerpt:Function
 }
-export default ({ currentLocation, setPageContent, setSectionContent, setHighlightExcerpt}: EpubHighLightProps) => {
+export default ({ 
+    currentLocation, 
+    setPageContent
+}: EpubHighLightProps) => {
     const [file, setFile] = useState()
 
     function handleChange(event: any) {
@@ -24,8 +25,6 @@ export default ({ currentLocation, setPageContent, setSectionContent, setHighlig
                 file={file}
                 currentLocation={currentLocation} 
                 setPageContent={setPageContent}
-                setSectionContent = {setSectionContent}
-                setHighlightExcerpt = {setHighlightExcerpt}
             />
         }
     </>

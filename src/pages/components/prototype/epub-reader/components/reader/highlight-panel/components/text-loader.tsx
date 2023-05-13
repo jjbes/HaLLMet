@@ -5,8 +5,8 @@ export default () => (
     <ContentLoader 
     speed={2}
     width={288}
-    height={84}
-    viewBox="0 0 288 84"
+    height={80}
+    viewBox="0 0 288 80"
     backgroundColor="#f3f3f3"
     foregroundColor="#ecebeb"
   >
