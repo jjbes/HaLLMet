@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react'
+import React from 'react'
 
-import EpubReader from './components/prototype/epub-reader'
+import EpubReader from './components/prototype'
 
 export default () => {
     return (

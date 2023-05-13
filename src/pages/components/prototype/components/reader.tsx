@@ -1,10 +1,8 @@
-import React, { useRef, useState, useEffect, MutableRefObject } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { ReactReader } from 'react-reader'
-import requestPostMethod from '../../../../api'
 import { get_encoding } from "@dqbd/tiktoken"
 
 import ButtonHighlight from './reader/button-highlight'
-import Modal from "../../modal/prompt-excerpt"
 import HighlightPanel from './reader/highlight-panel'
 import Background from './reader/background'
 
@@ -22,21 +20,25 @@ export default ({file}: ReaderProps) => {
     const [section, setSection] = useState<string|null>(null)
     const [location, setLocation] = useState<string>("0")
     const [pageContent, setPageContent] = useState<string|null>()
+    const [annotations, _] = useState<any>({})
 
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
-    const [displayHighlight, setDisplayHighlight] = useState<boolean>(true)
-    const [annotations, _] = useState<any>({})
-    const [prompt, setPrompt] = useState<string>("")
-    const [promptContexts, setPromptContexts] = useState<string[]>([])
+    const [toggleHighlights, setToggleHighlights] = useState<boolean>(true)
     const [highlights, setHighlights] = useState<Object>({})
     const [sectionContexts, setSectionContexts] = useState<Object>({})
     const [highlightedCfi, setHighlightedCfi] = useState<string|null>(null)
 
     const getExcerpt = async (context: string) => {
-        const body = JSON.stringify({ "context": context })
-        return requestPostMethod("excerpt", body, null)
-            .then(response => response.json())
-            .then(response => response.response)
+        return fetch("http://127.0.0.1:8000/excerpt", {
+            method : "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ "context": context })
+        })
+        .then(response => response.json())
+        .then(response => response.response)
     }
 
     const locationChanged = (epubcifi: string) => {
@@ -97,21 +99,6 @@ export default ({file}: ReaderProps) => {
         return chunks
     }
 
-    //Get a context window based on the current page
-    const getContextWindow = (renditionRef: MutableRefObject<any>) =>{
-        const start = renditionRef.current.currentLocation().start
-        if(!start) return
-
-        const section = renditionRef.current.book.spine.get(start.cfi)
-        const currPage = start.displayed.page - 1
-        const pageNumber = start.displayed.total
-        const chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
-        
-        const textWindow = [chunks[currPage-1], chunks[currPage], chunks[currPage+1]]
-                                .filter(Boolean).join(" ")
-        return textWindow
-    } 
-
     const highlightCfi = async (cfiRange:string) => {
         setHighlightedCfi(cfiRange)
         document.getElementById(cfiRange)?.scrollIntoView()
@@ -146,7 +133,7 @@ export default ({file}: ReaderProps) => {
 
     //Set Highlights
     useEffect(() => {
-        if(!displayHighlight) return
+        if(!toggleHighlights) return
         if(!location) return
         if(!location.includes("epubcfi")) return
         const start = renditionRef.current.currentLocation().start
@@ -160,7 +147,6 @@ export default ({file}: ReaderProps) => {
         const currChunksGroup = Math.floor(currPageNumber/maxChunksProcessing)
         let chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
         chunks = chunks.slice(currChunksGroup*maxChunksProcessing, Math.min(currChunksGroup*maxChunksProcessing+maxChunksProcessing, pageNumber))
-        setPromptContexts(chunks)
         setSectionContexts((sectionContext: any) => ({
             ...sectionContext,
             [section.canonical]: chunks
@@ -255,12 +241,12 @@ export default ({file}: ReaderProps) => {
             
         })
         
-    }, [location, displayHighlight])
+    }, [location, toggleHighlights])
 
     //Show/Hide higlights
     useEffect(() => {
         if(!renditionRef.current) return
-        if(!displayHighlight){
+        if(!toggleHighlights){
             Object.keys(renditionRef.current.annotations._annotations).forEach(key=>{
                 const annotation = renditionRef.current.annotations._annotations[key]
                 annotations[key] = renditionRef.current.annotations._annotations[key]
@@ -279,7 +265,7 @@ export default ({file}: ReaderProps) => {
                 )
             })
         }        
-    }, [displayHighlight])
+    }, [toggleHighlights])
 
     //Change color of highlight when selected
     useEffect(() => {
@@ -287,7 +273,7 @@ export default ({file}: ReaderProps) => {
         if(!renditionRef.current) return
         renditionRef.current.display(highlightedCfi)
 
-        if(displayHighlight){
+        if(toggleHighlights){
             Object.keys(renditionRef.current.annotations._annotations).forEach(key=>{
                 const annotation = renditionRef.current.annotations._annotations[key]
                 annotations[key] = renditionRef.current.annotations._annotations[key]
@@ -306,15 +292,6 @@ export default ({file}: ReaderProps) => {
             })
         }
     }, [highlightedCfi])
-
-    useEffect(() => {
-        if(prompt) return
-        fetch('http://127.0.0.1:8000/prompt/excerpt')
-        .then(response => response.json())
-        .then(response => {
-            setPrompt(response.response)
-        })
-    })
 
     return (
         <div className='h-full w-full flex relative'>
@@ -335,10 +312,9 @@ export default ({file}: ReaderProps) => {
                     <div className="top-[10px] right-[10px] z-50 absolute flex">
                     <ButtonHighlight 
                         nbReqLoading={nbReqLoading} 
-                        displayHighlight={displayHighlight} 
-                        setDisplayHighlight={setDisplayHighlight}/>
+                        toggleHighlights={toggleHighlights} 
+                        setToggleHighlights={setToggleHighlights}/>
                     </div>
-                    <Modal prompt={prompt} contexts={promptContexts}/>
                 </div>
             </div>
             <div className='h-full w-[30%] bg-white'>

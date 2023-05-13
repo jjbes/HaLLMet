@@ -2,15 +2,20 @@ import React from 'react';
 
 type DefaultBackgroundProps = {
     nbReqLoading: number,
-    displayHighlight: boolean,
-    setDisplayHighlight: Function
+    toggleHighlights: boolean,
+    setToggleHighlights: Function
 }
-export default ({ displayHighlight, nbReqLoading, setDisplayHighlight }: DefaultBackgroundProps) => {    
+export default ({ toggleHighlights, nbReqLoading, setToggleHighlights }: DefaultBackgroundProps) => {    
     return (
-        <button className={(nbReqLoading>0 ? "cursor-not-allowed " : "") + (displayHighlight ? "bg-slate-200 ring ring-slate-300 hover:bg-slate-300 ": "bg-slate-100 ring ring-slate-100 hover:bg-slate-200 ") + "h-8 w-8 ml-[14px] flex items-center justify-center rounded"}
-                onClick={() => {
-                    if(nbReqLoading<=0) setDisplayHighlight(!displayHighlight)
-                }}>
+        <button 
+            className={
+                `${nbReqLoading>0 ? "cursor-not-allowed " : ""} 
+                ${toggleHighlights ? "bg-slate-200 ring ring-slate-300 hover:bg-slate-300 ": "bg-slate-100 ring ring-slate-100 hover:bg-slate-200 "} 
+                h-8 w-8 ml-[14px] flex items-center justify-center rounded`
+            }
+            onClick={() => {
+                if(nbReqLoading<=0) setToggleHighlights(!toggleHighlights)
+        }}>
             {
                 nbReqLoading>0 ?
                 <svg className="animate-spin h-full w-full text-slate-900 p-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
