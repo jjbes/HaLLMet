@@ -2,28 +2,27 @@ import React, { useRef, useState, useEffect, MutableRefObject } from 'react'
 import { ReactReader } from 'react-reader'
 import requestPostMethod from '../../../../api'
 import { get_encoding } from "@dqbd/tiktoken"
+
 import ButtonHighlight from './reader/button-highlight'
 import Modal from "../../modal/prompt-excerpt"
 import HighlightPanel from './reader/highlight-panel'
+import Background from './reader/background'
 
 let excerptList: string[] = []
 
 type ReaderProps = {
     file: Blob | MediaSource
-    currentLocation:MutableRefObject<any>
-    setPageContent:Function
 }
 
-export default ({ 
-    file, 
-    currentLocation, 
-    setPageContent
-}: ReaderProps) => {
+export default ({file}: ReaderProps) => {
     const url = useRef(URL.createObjectURL(file))
     const renditionRef = useRef<any>(null)
+    const currentLocation = useRef<any>(null)
 
     const [section, setSection] = useState<string|null>(null)
     const [location, setLocation] = useState<string>("0")
+    const [pageContent, setPageContent] = useState<string|null>()
+
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
     const [displayHighlight, setDisplayHighlight] = useState<boolean>(true)
     const [annotations, _] = useState<any>({})
@@ -282,6 +281,7 @@ export default ({
         }        
     }, [displayHighlight])
 
+    //Change color of highlight when selected
     useEffect(() => {
         if(!highlightedCfi) return
         if(!renditionRef.current) return
@@ -317,9 +317,10 @@ export default ({
     })
 
     return (
-        <div className='h-full w-full flex'>
-            <div className='h-full w-7/12 flex flex-row relative'>
-                <div className='h-full w-full'>
+        <div className='h-full w-full flex relative'>
+            <div className='h-full w-[70%] flex flex-row relative justify-center'>
+                <Background currentPage={currentLocation.current ? currentLocation.current.page : null} context={pageContent??""}/>
+                <div className='h-full w-7/12 max-w-xl relative'>
                     <ReactReader
                         location={location}
                         locationChanged={locationChanged}
@@ -331,16 +332,16 @@ export default ({
                             renditionRef.current = rendition
                         }}
                     />
-                </div>
-                <div className="top-[10px] right-[10px] z-50 absolute flex">
+                    <div className="top-[10px] right-[10px] z-50 absolute flex">
                     <ButtonHighlight 
                         nbReqLoading={nbReqLoading} 
                         displayHighlight={displayHighlight} 
                         setDisplayHighlight={setDisplayHighlight}/>
+                    </div>
+                    <Modal prompt={prompt} contexts={promptContexts}/>
                 </div>
-                <Modal prompt={prompt} contexts={promptContexts}/>
             </div>
-            <div className='h-full w-5/12 ml-8 bg-white'>
+            <div className='h-full w-[30%] bg-white'>
                 <HighlightPanel 
                     section={section?section:''} 
                     sectionContexts={sectionContexts} 

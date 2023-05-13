@@ -66,7 +66,7 @@ export default ({section, sectionContexts, highlights, highlightedCfi, setHighli
     })
 
     return (
-        <div className="max-h-full w-full overflow-auto p-4">
+        <div className="max-h-full w-full overflow-auto p-4 pr-6">
             {
                 panelContent
             }

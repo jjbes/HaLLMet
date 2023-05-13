@@ -16,7 +16,7 @@ export default ({ imageUrl }: ImageBackgroundProps) => {
             {
                 transitions((style, data) => (
                     <animated.div
-                        className="-z-50 absolute h-full w-full top-0 left-0 bg-bottom bg-no-repeat bg-cover after:content-[''] after:absolute after:h-full after:w-full after:backdrop-blur" 
+                        className="-z-50 absolute h-full w-full top-0 left-0 bg-bottom bg-no-repeat bg-cover after:content-[''] after:absolute after:h-full after:w-full after:left-0 after:top-0 after:backdrop-blur" 
                         style={{
                             ...style,
                             backgroundImage: data ? `url(${data})`: 'none',

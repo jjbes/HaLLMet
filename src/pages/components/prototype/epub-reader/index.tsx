@@ -1,15 +1,8 @@
-import React, { MutableRefObject, useState } from 'react'
+import React, { useState } from 'react'
 import Reader from './components/reader'
 import Uploader from './components/uploader'
 
-type EpubHighLightProps = {
-    currentLocation: MutableRefObject<any>
-    setPageContent:Function
-}
-export default ({ 
-    currentLocation, 
-    setPageContent
-}: EpubHighLightProps) => {
+export default () => {
     const [file, setFile] = useState()
 
     function handleChange(event: any) {
@@ -21,11 +14,7 @@ export default ({
         {
             !file ? 
             <Uploader event={handleChange}/> : 
-            <Reader 
-                file={file}
-                currentLocation={currentLocation} 
-                setPageContent={setPageContent}
-            />
+            <Reader file={file}/>
         }
     </>
     )

@@ -18,7 +18,7 @@ export default ({prompt, context}: ModalProps) => {
     }
 
     return (
-    <div>
+    <>
         <button style={{"zIndex":"9999999"}} className='absolute bottom-5 right-5 h-[20px] w-[20px] text-xs text-slate-400 border-slate-400 rounded-full border-dotted border-2' onClick={openModal}>?</button>
         <Modal
             isOpen={modalIsOpen}
@@ -42,6 +42,6 @@ export default ({prompt, context}: ModalProps) => {
                 </div>
             </div>
         </Modal>
-    </div>
+    </>
     )
 }
