@@ -19,7 +19,7 @@ export default ({file}: ReaderProps) => {
     const renditionRef = useRef<any>(null)
     const currentLocation = useRef<any>(null)
 
-    const [section, setSection] = useState<string|null>(null)
+    const [sectionCanonical, setSectionCanonical] = useState<string|null>(null)
     const [location, setLocation] = useState<string>("0")
     const [pageContent, setPageContent] = useState<string|null>()
     const [annotations, _] = useState<any>({})
@@ -145,6 +145,7 @@ export default ({file}: ReaderProps) => {
     //TODO: 
     //- Ensure one error in promise is not blocking for too long
     //- Notify other batch is waiting
+    //- Prompts
     const highlightAll = async(section:any, contexts:Array<string>, batchSize:number) => {
         let position = 0
         while (position < contexts.length) {
@@ -253,11 +254,11 @@ export default ({file}: ReaderProps) => {
 
         //Save location
         currentLocation.current = {
-            section:section.canonical,
+            sectionCanonical:section.canonical,
             page:location
         }
         //Set current section
-        setSection(section.canonical)
+        setSectionCanonical(section.canonical)
         //Get page content
         const splitCfi = start.cfi.split('/')
         const baseCfi = splitCfi[0] + '/' + splitCfi[1] + '/' + splitCfi[2] + '/' + splitCfi[3]
@@ -367,7 +368,7 @@ export default ({file}: ReaderProps) => {
             </div>
             <div className={`h-full ${showPanel?"w-1/3":"w-0"} transition-all duration-500 bg-white`}>
                 <HighlightPanel 
-                    section={section?section:''}
+                    sectionCanonical={sectionCanonical?sectionCanonical:''}
                     highlights={highlights}
                     highlightedCfi={highlightedCfi}
                     setHighlightedCfi={setHighlightedCfi}
