@@ -2,16 +2,26 @@ import React from 'react'
 import Contextualization from './components/contextualization'
 import Quote from './components/quote'
 import TextLoader from './components/text-loader'
+import QuoteLoader from './components/quote-loader'
 
 type HighlightProps = {
     sectionCanonical:string
     highlights:{ [key: string]: any }
     highlightedCfi:string|null
     setHighlightedCfi:Function
-    isLoading:boolean
+    isLoadingBatch:boolean
+    isLoadingMoreBatch:boolean
     retryHighlight:Function
 }
-export default ({sectionCanonical, highlights, highlightedCfi, setHighlightedCfi, isLoading, retryHighlight}: HighlightProps) => {
+export default ({
+    sectionCanonical, 
+    highlights, 
+    highlightedCfi, 
+    setHighlightedCfi, 
+    isLoadingBatch, 
+    isLoadingMoreBatch, 
+    retryHighlight
+}: HighlightProps) => {
     if (!sectionCanonical) return <></>
     if (!(sectionCanonical in highlights)) return <></>
 
@@ -34,16 +44,21 @@ export default ({sectionCanonical, highlights, highlightedCfi, setHighlightedCfi
             </p>
         )
         
-        if(!Object.entries(element[1]).length && isLoading){
+        if(!Object.entries(element[1]).length && isLoadingBatch){
             panelContent.push(
                 <div className={`relative h-full p-4 text-center text-gray-700 bg-white border-l-4 border-l-blue-500 cursor-pointer`}>
-                    <TextLoader/>
+                    <div className='pb-4'>
+                        <TextLoader/>
+                    </div>
+                    <div className='pt-4'>
+                        <QuoteLoader/>
+                    </div>
                 </div>
             )
             return
         }
 
-        if(!Object.entries(element[1]).length && !isLoading){
+        if(!Object.entries(element[1]).length && !isLoadingBatch){
             panelContent.push(
                 <div 
                     className={`relative h-full p-4 text-center text-gray-700 bg-white border-l-4 border-l-blue-500 cursor-pointer`}
@@ -83,6 +98,7 @@ export default ({sectionCanonical, highlights, highlightedCfi, setHighlightedCfi
     return (
         <div className="max-h-full w-full overflow-auto p-4 pr-6">
             { panelContent }
+            { isLoadingMoreBatch ? <div className='p-4'>...</div> : <></> }
         </div>
     )
 }

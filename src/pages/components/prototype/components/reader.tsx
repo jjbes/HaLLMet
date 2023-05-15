@@ -25,6 +25,7 @@ export default ({file}: ReaderProps) => {
     const [annotations, _] = useState<any>({})
 
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
+    const [isLoadingMoreBatch, setIsLoadingMoreBatch] = useState<boolean>(false)
     const [toggleHighlights, setToggleHighlights] = useState<boolean>(true)
     const [highlights, setHighlights] = useState<Object>({})
     const [highlightedCfi, setHighlightedCfi] = useState<string|null>(null)
@@ -148,7 +149,13 @@ export default ({file}: ReaderProps) => {
     //- Prompts
     const highlightAll = async(section:any, contexts:Array<string>, batchSize:number) => {
         let position = 0
+        setIsLoadingMoreBatch(true)
         while (position < contexts.length) {
+
+            if((position + batchSize)>=contexts.length){
+                setIsLoadingMoreBatch(false)
+            }
+
             const batch = contexts.slice(position, position + batchSize)
             await Promise.all(batch.map((context, indexBatch) => {
                 if(context.length < 10) return              
@@ -372,7 +379,8 @@ export default ({file}: ReaderProps) => {
                     highlights={highlights}
                     highlightedCfi={highlightedCfi}
                     setHighlightedCfi={setHighlightedCfi}
-                    isLoading={nbReqLoading>0?true:false}
+                    isLoadingBatch={nbReqLoading>0?true:false}
+                    isLoadingMoreBatch={isLoadingMoreBatch}
                     retryHighlight={retryHighlight}
                     />
             </div>
