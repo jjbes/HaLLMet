@@ -27,7 +27,6 @@ export default ({file}: ReaderProps) => {
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
     const [toggleHighlights, setToggleHighlights] = useState<boolean>(true)
     const [highlights, setHighlights] = useState<Object>({})
-    const [sectionContexts, setSectionContexts] = useState<Object>({})
     const [highlightedCfi, setHighlightedCfi] = useState<string|null>(null)
     const [showPanel, setShowPanel] = useState<boolean>(false)
 
@@ -42,6 +41,142 @@ export default ({file}: ReaderProps) => {
         })
         .then(response => response.json())
         .then(response => response.response)
+    }
+
+    const highlightOne = async (section:any, context:string, indexHighlight:number) => {
+        const excerpts = await getExcerpt(context)
+        .finally(()=>{
+            setNbReqLoading((val) => val - 1)
+        })
+        .catch(e => {
+            console.error('API call error :', e.name, e.message)
+            console.log("retry?")
+        })
+        if(!excerpts) return
+
+        excerpts.replace(/(\d.\s)/g, "|")
+        .replaceAll("\n", '')
+        .split("|")
+
+        const chunkHighlights = excerpts.replace(/(\d.\s)/g, "|")
+                            .replaceAll("\n", '')
+                            .split("|")
+
+        chunkHighlights.forEach((highlight: string, highlightIndex:number) => {
+            if(!highlight) return
+            //Remove trailing spaces and quotes
+            highlight = highlight.trim().replace(/^"(.*)"$/, '$1')
+            
+            let paragraphs = section.contents.children[1].childNodes
+            
+            for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
+                if(!paragraph.textContent) return
+
+                const pos = findInString(highlight, paragraph.textContent)
+
+                if (pos != -1){
+                    const range = section.document.createRange()
+                    
+                    //setStart loop
+                    let nodes = searchInNestedNodes(paragraph, pos)
+                    let sum = 0
+                    nodes.forEach((node) => {
+                        sum += node.textContent.length
+                    })
+
+                    range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
+                    
+                    //setEnd loop
+                    nodes = searchInNestedNodes(paragraph, pos + highlight.length)
+                    sum = 0
+                    nodes.forEach((node) => {
+                        sum += node.textContent.length
+                    })
+                    range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
+
+                    const cfi = section.cfiFromRange(range)
+
+                    renditionRef.current.annotations.add(
+                        'highlight',
+                        cfi,
+                        {},
+                        ()=>{ highlightCfi(cfi) },
+                        'highlight',
+                        null
+                    )
+
+                    /* Highlights follow this object format:
+                    Object {
+                        "/OEBPS/6600632123799531513_11-h-0.htm.xhtml": Object {
+                            0: Object { 
+                                0: Object { 
+                                    content: "Content 1", href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:1,/1:155)" 
+                                }
+                                1: Object { 
+                                    content: "Content 2", 
+                                    href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:156,/3:1)" 
+                                }
+                            },
+                            1: Object{...}
+                        }
+                        "/OEBPS/6600632123799531513_11-h-1.htm.xhtml": {…}
+                    }
+                    */
+                    setHighlights((highlights: any) => ({
+                        ...highlights,
+                        [section.canonical]: {
+                            ...highlights[section.canonical],
+                            [indexHighlight]: {
+                                ...(highlights[section.canonical]?highlights[section.canonical][indexHighlight] : {}),
+                                [highlightIndex]: {
+                                    content:highlight,
+                                    href:cfi,
+                                },
+                                context:context
+                            }
+                        }
+                    }))
+                    break
+                }
+            }
+        })
+    }
+
+    //TODO: 
+    //- Ensure one error in promise is not blocking for too long
+    //- Notify other batch is waiting
+    const highlightAll = async(section:any, contexts:Array<string>, batchSize:number) => {
+        let position = 0
+        while (position < contexts.length) {
+            const batch = contexts.slice(position, position + batchSize)
+            await Promise.all(batch.map((context, indexBatch) => {
+                if(context.length < 10) return              
+                const indexHighlight = indexBatch+position
+                //No API call if the highlights are already loaded
+                if (excerptList.includes(section.canonical+indexHighlight)) return
+                excerptList.push(section.canonical+indexHighlight)
+
+                setNbReqLoading((val) => val + 1)
+                setHighlights((highlights: any) => ({
+                    ...highlights,
+                    [section.canonical]: {
+                        ...highlights[section.canonical],
+                        [indexHighlight]: {}
+                    }
+                }))
+                return highlightOne(section, context, indexHighlight)
+            }))
+            position += batchSize
+        }
+    }
+
+    const retryHighlight = (index:number) => {
+        const start = renditionRef.current.currentLocation().start
+        const section = renditionRef.current.book.spine.get(start.cfi)
+        const pageNumber = start.displayed.total
+        const contexts = splitSectionContext(section.contents.textContent, pageNumber)
+        setNbReqLoading((val) => val + 1)
+        highlightOne(section, contexts[index], index)
     }
 
     const locationChanged = (epubcifi: string) => {
@@ -83,7 +218,7 @@ export default ({file}: ReaderProps) => {
         return recursor(node)
     }
 
-    const splitbyChunkNumber = (string: string, chunkNumber: number) => {
+    const splitSectionContext = (string: string, chunkNumber: number) => {
         let chunks = []
         const enc = get_encoding("cl100k_base")
 
@@ -136,6 +271,7 @@ export default ({file}: ReaderProps) => {
 
     //Set Highlights
     useEffect(() => {
+        if(nbReqLoading>0) return
         if(!toggleHighlights) return
         if(!location) return
         if(!location.includes("epubcfi")) return
@@ -143,137 +279,12 @@ export default ({file}: ReaderProps) => {
         if(!start) return
 
         //Handling large sections. LIMITATIONS: Cannot get proper page content yet
-        const maxChunksProcessing = 10 //Number of chunks to load at the same time
         const section = renditionRef.current.book.spine.get(start.cfi)
-        const currPageNumber = start.displayed.page - 1
         const pageNumber = start.displayed.total
-        const currChunksGroup = Math.floor(currPageNumber/maxChunksProcessing)
-        let chunks = splitbyChunkNumber(section.contents.textContent, pageNumber)
-        chunks = chunks.slice(currChunksGroup*maxChunksProcessing, Math.min(currChunksGroup*maxChunksProcessing+maxChunksProcessing, pageNumber))
-        setSectionContexts((sectionContext: any) => ({
-            ...sectionContext,
-            [section.canonical]: chunks
-        }))
+        const contexts = splitSectionContext(section.contents.textContent, pageNumber)
+        const batchSize = 5
+        highlightAll(section, contexts, batchSize)
 
-
-        //No API call if the highlights are already loaded
-        if (excerptList.includes(section.canonical+currChunksGroup)) return
-        excerptList.push(section.canonical+currChunksGroup)
-                
-        chunks.forEach((context:string, indexChunk:number)=>{
-            if(context.length < 10) return              
-            setNbReqLoading((val) => val + 1)
-
-            ;(async () => {
-                const excerpts = await getExcerpt(context)
-                .finally(()=>{
-                    setNbReqLoading((val) => val - 1)
-                })
-                .catch(e => {
-                    console.error('API call error :', e.name, e.message)
-                })
-                if(!excerpts) return
-
-                excerpts.replace(/(\d.\s)/g, "|")
-                .replaceAll("\n", '')
-                .split("|")
-
-                const chunkHighlights = excerpts.replace(/(\d.\s)/g, "|")
-                                    .replaceAll("\n", '')
-                                    .split("|")
-
-                chunkHighlights.forEach((highlight: string, highlightIndex:number) => {
-                    if(!highlight) return
-                    //Remove trailing spaces and quotes
-                    highlight = highlight.trim().replace(/^"(.*)"$/, '$1')
-                    
-                    let paragraphs = section.contents.children[1].childNodes
-                    
-                    for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
-                        if(!paragraph.textContent) return
-
-                        const pos = findInString(highlight, paragraph.textContent)
-
-                        if (pos != -1){
-                            const range = section.document.createRange()
-                            
-                            //setStart loop
-                            let nodes = searchInNestedNodes(paragraph, pos)
-                            let sum = 0
-                            nodes.forEach((node) => {
-                                sum += node.textContent.length
-                            })
-
-                            range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
-                            
-                            //setEnd loop
-                            nodes = searchInNestedNodes(paragraph, pos + highlight.length)
-                            sum = 0
-                            nodes.forEach((node) => {
-                                sum += node.textContent.length
-                            })
-                            range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
-
-                            const cfi = section.cfiFromRange(range)
-
-                            renditionRef.current.annotations.add(
-                                'highlight',
-                                cfi,
-                                {},
-                                ()=>{ highlightCfi(cfi) },
-                                'highlight',
-                                null
-                            )
-                            
-                            /*setHighlights((highlights: any) => ({
-                                ...highlights,
-                                [highlight]: {
-                                    section:section.canonical,
-                                    index:indexChunk,
-                                    content:highlight, 
-                                    href:cfi,
-                                }
-                            }))*/
-
-                            /* Highlights follow this object format:
-                            Object {
-                                "/OEBPS/6600632123799531513_11-h-0.htm.xhtml": Object {
-                                    0: Object { 
-                                        0: Object { 
-                                            content: "Content 1", href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:1,/1:155)" 
-                                        }
-                                        1: Object { 
-                                            content: "Content 2", 
-                                            href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:156,/3:1)" 
-                                        }
-                                    },
-                                    1: Object{...}
-                                }
-                                "/OEBPS/6600632123799531513_11-h-1.htm.xhtml": {…}
-                            }
-                            */
-                            setHighlights((highlights: any) => ({
-                                ...highlights,
-                                [section.canonical]: {
-                                    ...highlights[section.canonical],
-                                    [indexChunk]: {
-                                        ...(highlights[section.canonical]?highlights[section.canonical][indexChunk] : {}),
-                                        [highlightIndex]: {
-                                            content:highlight,
-                                            href:cfi,
-                                        }
-                                    }
-                                }
-                            }))
-                            break
-                        }
-                    }
-                })
-            })()
-
-            
-        })
-        
     }, [location, toggleHighlights])
 
     //Show/Hide higlights
@@ -356,11 +367,13 @@ export default ({file}: ReaderProps) => {
             </div>
             <div className={`h-full ${showPanel?"w-1/3":"w-0"} transition-all duration-500 bg-white`}>
                 <HighlightPanel 
-                    section={section?section:''} 
-                    sectionContexts={sectionContexts} 
+                    section={section?section:''}
                     highlights={highlights}
                     highlightedCfi={highlightedCfi}
-                    setHighlightedCfi={setHighlightedCfi}/>
+                    setHighlightedCfi={setHighlightedCfi}
+                    isLoading={nbReqLoading>0?true:false}
+                    retryHighlight={retryHighlight}
+                    />
             </div>
         </div>
             
