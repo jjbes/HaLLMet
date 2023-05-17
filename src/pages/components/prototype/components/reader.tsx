@@ -52,8 +52,7 @@ export default ({file}: ReaderProps) => {
         const re = new RegExp(query
             .replaceAll(specialChars, '[\\s\\S]?')
             .replaceAll(whitespace, '\\s*'), "gmi")
-        console.log(re)
-        const match = re.exec(text) //Only one match, could be multiple
+        const match = re.exec(text)
         return match
     }
 
@@ -72,13 +71,20 @@ export default ({file}: ReaderProps) => {
                             .split("|")
                             .filter((element:any) => element != "")
 
+        setSectionAccuracies((sectionAccuracies: any) => ({
+            ...sectionAccuracies,
+            [section.canonical]: {
+                ...sectionAccuracies[section.canonical],
+                total: sectionAccuracies[section.canonical].total + (chunkHighlights.length??0)
+            }
+        }))                    
+
         chunkHighlights.forEach((highlight: string, chunkIndex:number) => {
             if(!highlight) return
             //Remove trailing spaces and quotes
             highlight = highlight.trim().replace(/^"(.*)"$/, '$1')
 
             //TODO: 
-            //- Fix italic
             //- Check if there are better ways to handle section content
             renditionRef.current.book.loaded.spine.then((spine:any) => {
                 const textContent = spine.get(section.href).contents.lastElementChild.textContent
@@ -88,12 +94,14 @@ export default ({file}: ReaderProps) => {
                 const getCfi = (match:any) => {
                     if(match){
                         const originalText = textContent?.substring(match.index, match.index+match[0].length)
-                        const foundExcerpt = section.find(originalText)
-                        if(foundExcerpt.length){
-                            return foundExcerpt[0].cfi
-                        }else{
-                            console.log("epubjs find err")
+                        let foundExcerpt = section.find(originalText)
+
+                        if(!foundExcerpt.length){
+                            //Slower than find(), only when text is not in a single node; 
+                            //look for the text in 5 sequential nodes
+                            foundExcerpt = section.search(originalText, 5)
                         }
+                        if(foundExcerpt.length) return foundExcerpt[0].cfi
                     }
                     return null
                 }
@@ -156,7 +164,7 @@ export default ({file}: ReaderProps) => {
                 ...sectionAccuracies,
                 [section.canonical]: {
                     correct: 0,
-                    total: contexts.length * 3
+                    total: 0
                 }
             }))
         }
@@ -326,10 +334,6 @@ export default ({file}: ReaderProps) => {
     useEffect(() => {
         if(Object.keys(highlights).length) setShowPanel(true)
     },[highlights])
-
-    useEffect(() => {
-        console.log(sectionAccuracies)
-    },[sectionAccuracies])
 
     const showHighlights = () => {
         if(!Object.keys(highlights).length) return

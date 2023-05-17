@@ -32,9 +32,11 @@ export default ({
         <div className="max-h-full w-full overflow-auto pl-4 pb-4 pr-6">
             <div className='sticky top-0 text-end bg-white z-50 pt-4 pb-4'>
                 Section accuracy: {  
-                    sectionAccuracies[sectionCanonical] ?
-                    (parseInt(sectionAccuracies[sectionCanonical].correct ?? 0)/
-                    parseInt(sectionAccuracies[sectionCanonical].total)).toPrecision(2) :
+                    sectionAccuracies[sectionCanonical]?.total ?
+                    (
+                        sectionAccuracies[sectionCanonical].correct/
+                        sectionAccuracies[sectionCanonical].total
+                    ).toPrecision(2) :
                     (0).toPrecision(2)
                 }
             </div>
@@ -43,10 +45,16 @@ export default ({
                     const index = parseInt(element[0])
 
                     if(!Object.entries(element[1]).length && isLoadingBatch){
-                        return <HighlightCardLoader index={index} sectionCanonical={sectionCanonical}/>
+                        return <HighlightCardLoader 
+                            key={`card-loader-${sectionCanonical}-${index}`}
+                            index={index} 
+                            sectionCanonical={sectionCanonical}/>
                     }
+                    //TODO:
+                    //- Differenciate API error from model error (Only API should be displayed)
                     if(!Object.entries(element[1]).length && !isLoadingBatch){
                         return <HighlightCardError
+                            key={`card-error-${sectionCanonical}-${index}`}
                             index={index} 
                             sectionCanonical={sectionCanonical}
                             retryHighlight={retryHighlight}/>
