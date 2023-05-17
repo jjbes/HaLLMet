@@ -31,6 +31,8 @@ export default ({file}: ReaderProps) => {
     const [highlightedCfi, setHighlightedCfi] = useState<string|null>(null)
     const [showPanel, setShowPanel] = useState<boolean>(false)
 
+    const [sectionAccuracies, setSectionAccuracies] = useState<Object>({})
+
     const getExcerpt = async (context: string) => {
         return fetch("http://127.0.0.1:8000/excerpt", {
             method : "POST",
@@ -44,6 +46,17 @@ export default ({file}: ReaderProps) => {
         .then(response => response.response)
     }
 
+    const findInString = (query: string, text: string) => {
+        const specialChars = /[\p{P}\p{S}]/gu
+        const whitespace = /\s/g
+        const re = new RegExp(query
+            .replaceAll(specialChars, '[\\s\\S]?')
+            .replaceAll(whitespace, '\\s*'), "gmi")
+        console.log(re)
+        const match = re.exec(text) //Only one match, could be multiple
+        return match
+    }
+
     const highlightOne = async (section:any, context:string, indexHighlight:number) => {
         const excerpts = await getExcerpt(context)
         .finally(()=>{
@@ -51,52 +64,42 @@ export default ({file}: ReaderProps) => {
         })
         .catch(e => {
             console.error('API call error :', e.name, e.message)
-            console.log("retry?")
         })
         if(!excerpts) return
 
-        excerpts.replace(/(\d.\s)/g, "|")
-        .replaceAll("\n", '')
-        .split("|")
-
-        const chunkHighlights = excerpts.replace(/(\d.\s)/g, "|")
+        const chunkHighlights = excerpts.replace(/(\d\.\s)/g, "|")
                             .replaceAll("\n", '')
                             .split("|")
+                            .filter((element:any) => element != "")
 
-        chunkHighlights.forEach((highlight: string, highlightIndex:number) => {
+        chunkHighlights.forEach((highlight: string, chunkIndex:number) => {
             if(!highlight) return
             //Remove trailing spaces and quotes
             highlight = highlight.trim().replace(/^"(.*)"$/, '$1')
-            
-            let paragraphs = section.contents.children[1].childNodes
-            
-            for (const[_, paragraph] of Object.entries<Node>(paragraphs)){
-                if(!paragraph.textContent) return
 
-                const pos = findInString(highlight, paragraph.textContent)
+            //TODO: 
+            //- Fix italic
+            //- Check if there are better ways to handle section content
+            renditionRef.current.book.loaded.spine.then((spine:any) => {
+                const textContent = spine.get(section.href).contents.lastElementChild.textContent
 
-                if (pos != -1){
-                    const range = section.document.createRange()
-                    
-                    //setStart loop
-                    let nodes = searchInNestedNodes(paragraph, pos)
-                    let sum = 0
-                    nodes.forEach((node) => {
-                        sum += node.textContent.length
-                    })
+                const match = findInString(highlight, textContent)
+                
+                const getCfi = (match:any) => {
+                    if(match){
+                        const originalText = textContent?.substring(match.index, match.index+match[0].length)
+                        const foundExcerpt = section.find(originalText)
+                        if(foundExcerpt.length){
+                            return foundExcerpt[0].cfi
+                        }else{
+                            console.log("epubjs find err")
+                        }
+                    }
+                    return null
+                }
+                const cfi = getCfi(match)
 
-                    range.setStart(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-pos))
-                    
-                    //setEnd loop
-                    nodes = searchInNestedNodes(paragraph, pos + highlight.length)
-                    sum = 0
-                    nodes.forEach((node) => {
-                        sum += node.textContent.length
-                    })
-                    range.setEnd(nodes[nodes.length-1], nodes[nodes.length-1].textContent.length - (sum-(pos + highlight.length)))
-
-                    const cfi = section.cfiFromRange(range)
-
+                if(cfi){
                     renditionRef.current.annotations.add(
                         'highlight',
                         cfi,
@@ -106,50 +109,58 @@ export default ({file}: ReaderProps) => {
                         null
                     )
 
-                    /* Highlights follow this object format:
-                    Object {
-                        "/OEBPS/6600632123799531513_11-h-0.htm.xhtml": Object {
-                            0: Object { 
-                                0: Object { 
-                                    content: "Content 1", href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:1,/1:155)" 
-                                }
-                                1: Object { 
-                                    content: "Content 2", 
-                                    href: "epubcfi(/6/4!/4/2[pg-header]/4,/1:156,/3:1)" 
-                                }
-                            },
-                            1: Object{...}
-                        }
-                        "/OEBPS/6600632123799531513_11-h-1.htm.xhtml": {…}
-                    }
-                    */
+                    //TODO:Check why it's not updating on alice.epub
                     setHighlights((highlights: any) => ({
                         ...highlights,
                         [section.canonical]: {
                             ...highlights[section.canonical],
                             [indexHighlight]: {
-                                ...(highlights[section.canonical]?highlights[section.canonical][indexHighlight] : {}),
-                                [highlightIndex]: {
-                                    content:highlight,
-                                    href:cfi,
+                                ...highlights[section.canonical][indexHighlight],
+                                highlights: {
+                                    ...highlights[section.canonical][indexHighlight].highlights,
+                                    [chunkIndex]:{
+                                        content:highlight,
+                                        href:cfi
+                                    }
                                 },
                                 context:context
+
                             }
                         }
                     }))
-                    break
-                }
-            }
+                    setSectionAccuracies((sectionAccuracies: any) => ({
+                        ...sectionAccuracies,
+                        [section.canonical]: {
+                            ...sectionAccuracies[section.canonical],
+                            correct:sectionAccuracies[section.canonical].correct + 1
+                        }
+                    }))
+                }  
+            })
+            
+
         })
     }
 
     //TODO: 
     //- Ensure one error in promise is not blocking for too long
-    //- Notify other batch is waiting
+    //- Fix promise blocking other chapters
     //- Prompts
+    //- Loading by batches
     const highlightAll = async(section:any, contexts:Array<string>, batchSize:number) => {
         let position = 0
         setIsLoadingMoreBatch(true)
+
+        if(!(section.canonical in sectionAccuracies)) {
+            setSectionAccuracies((sectionAccuracies: any) => ({
+                ...sectionAccuracies,
+                [section.canonical]: {
+                    correct: 0,
+                    total: contexts.length * 3
+                }
+            }))
+        }
+
         while (position < contexts.length) {
 
             if((position + batchSize)>=contexts.length){
@@ -192,39 +203,6 @@ export default ({file}: ReaderProps) => {
     }
 
     const flattenWhiteSpaces = (text: string) =>  text.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
-
-    const findInString = (query: string, text: string) => {
-        //Replace all special characters to prevent errors between characters such as “|"
-        //or ? characters in regex
-        const specialChars = /[^\w&^\s]/gm
-        query = query.replace(specialChars, "_")
-        text = text.replace(specialChars, "_")
-        //Replace the query spaces by \s* to match whitespace-independant patterns.
-        const re = new RegExp(query.replace(/\s/g,'\\s*'), "gmi")
-        const match = re.exec(text) //Only one match, could be multiple
-        return match ? match.index : -1
-    }
-    
-    const searchInNestedNodes = (node: Node, target: number) => {
-        //TODO: Fix whitespace in calcultations
-        const recursor = (node: Node) => {
-            let a: any[] = []
-            if(target<0){
-                return a
-            }
-            if (node.nodeType == 3) {
-                target = target - (node.textContent?.length ?? 0)
-                a.push(node)
-    
-            } else {
-                for (const[_, childNode] of Object.entries(node.childNodes)){
-                    a = a.concat(recursor(childNode))
-                }
-            }
-            return a
-        }
-        return recursor(node)
-    }
 
     const splitSectionContext = (string: string, chunkNumber: number) => {
         let chunks = []
@@ -349,8 +327,19 @@ export default ({file}: ReaderProps) => {
         if(Object.keys(highlights).length) setShowPanel(true)
     },[highlights])
 
+    useEffect(() => {
+        console.log(sectionAccuracies)
+    },[sectionAccuracies])
+
+    const showHighlights = () => {
+        if(!Object.keys(highlights).length) return
+        if(nbReqLoading>0) return
+        setShowPanel(!showPanel)
+        setToggleHighlights(!toggleHighlights)
+    }
+
     return (
-        <div className='h-full w-full flex relative'>
+        <div className='h-full w-full flex relative overflow-hidden'>
             <div className={`h-full ${showPanel?"w-2/3":"w-full"} pt-8 transition-all duration-500 flex flex-row relative justify-center`}>
                 <Background currentPage={currentLocation.current ? currentLocation.current.page : null} context={pageContent??""}/>
                 <div className='h-full w-[38rem] relative'>
@@ -365,11 +354,12 @@ export default ({file}: ReaderProps) => {
                             renditionRef.current = rendition
                         }}
                     />
-                    <div className="top-[10px] right-[10px] z-50 absolute flex">
-                    <ButtonHighlight 
-                        nbReqLoading={nbReqLoading} 
-                        toggleHighlights={toggleHighlights} 
-                        setToggleHighlights={setToggleHighlights}/>
+                    <div 
+                        className="top-[10px] right-[10px] z-50 absolute flex"
+                        onClick={() => showHighlights()}>
+                        <ButtonHighlight 
+                            nbReqLoading={nbReqLoading} 
+                            toggleHighlights={toggleHighlights}/>
                     </div>
                 </div>
             </div>
@@ -382,6 +372,7 @@ export default ({file}: ReaderProps) => {
                     isLoadingBatch={nbReqLoading>0?true:false}
                     isLoadingMoreBatch={isLoadingMoreBatch}
                     retryHighlight={retryHighlight}
+                    sectionAccuracies={sectionAccuracies}
                     />
             </div>
         </div>

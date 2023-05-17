@@ -5,11 +5,11 @@ let contextualList: {[k: string]: Map<number, string|null>} = {}
 
 type ContextualizationProps = {
     context:string
-    highlights:Array<string>
+    sentence:string
     section:string
     index:number
 }
-export default ({ context, highlights, section, index }: ContextualizationProps) => {
+export default ({ context, sentence, section, index }: ContextualizationProps) => {
     const [contextualization, setContextualization] = useState<string|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [apiError, setApiError] = useState<boolean>(false)
@@ -17,13 +17,14 @@ export default ({ context, highlights, section, index }: ContextualizationProps)
 
     const requestContexualizations = async () =>{
         contextualList[section].set(index, "")
+
         return fetch("http://127.0.0.1:8000/contextualize", {
             method : "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body : JSON.stringify({ "context": context, "sentence": highlights.join('\n') })
+            body : JSON.stringify({ "context": context, "sentence": sentence })
         })
         .then(response => response.json())
         .then(response => {
