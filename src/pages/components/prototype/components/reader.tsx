@@ -117,7 +117,6 @@ export default ({file}: ReaderProps) => {
                         null
                     )
 
-                    //TODO:Check why it's not updating on alice.epub
                     setHighlights((highlights: any) => ({
                         ...highlights,
                         [section.canonical]: {
@@ -151,10 +150,7 @@ export default ({file}: ReaderProps) => {
     }
 
     //TODO: 
-    //- Ensure one error in promise is not blocking for too long
-    //- Fix promise blocking other chapters
     //- Prompts
-    //- Loading by batches
     const highlightAll = async(section:any, contexts:Array<string>, batchSize:number) => {
         let position = 0
         setIsLoadingMoreBatch(true)
@@ -176,6 +172,7 @@ export default ({file}: ReaderProps) => {
             }
 
             const batch = contexts.slice(position, position + batchSize)
+
             await Promise.all(batch.map((context, indexBatch) => {
                 if(context.length < 10) return              
                 const indexHighlight = indexBatch+position
@@ -265,7 +262,6 @@ export default ({file}: ReaderProps) => {
 
     //Set Highlights
     useEffect(() => {
-        if(nbReqLoading>0) return
         if(!toggleHighlights) return
         if(!location) return
         if(!location.includes("epubcfi")) return
