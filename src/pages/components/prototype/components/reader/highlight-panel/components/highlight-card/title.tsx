@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react'
-import TextLoader from './text-loader'
+import TitleLoader from './title-loader'
 
-let contextualList: {[k: string]: Map<number, string|null>} = {}
+let titleList: {[k: string]: Map<number, string|null>} = {}
 
-type ContextualizationProps = {
+type TitleProps = {
     context:string
     sentence:string
     section:string
     index:number
 }
-export default ({ context, sentence, section, index }: ContextualizationProps) => {
-    const [contextualization, setContextualization] = useState<string|null>(null)
+export default ({ context, sentence, section, index }: TitleProps) => {
+    const [title, setTitle] = useState<string|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [apiError, setApiError] = useState<boolean>(false)
     const [dataError, setDataError] = useState<boolean>(false)
 
     const requestContexualizations = async () =>{
-        contextualList[section].set(index, "")
+        titleList[section].set(index, "")
 
-        return fetch("http://127.0.0.1:8000/explain", {
+        return fetch("http://127.0.0.1:8000/title", {
             method : "POST",
             headers: {
                 'Accept': 'application/json',
@@ -28,8 +28,8 @@ export default ({ context, sentence, section, index }: ContextualizationProps) =
         })
         .then(response => response.json())
         .then(response => {
-            setContextualization(response.response)
-            contextualList[section].set(index, response.response)
+            setTitle(response.response)
+            titleList[section].set(index, response.response)
         })
         .finally(()=> {
             setLoading(false)
@@ -38,7 +38,7 @@ export default ({ context, sentence, section, index }: ContextualizationProps) =
             console.error('API call error :', e.name, e.message)
             setApiError(true)
             setLoading(false)
-            contextualList[section].set(index, null)
+            titleList[section].set(index, null)
         })      
     }
 
@@ -51,13 +51,13 @@ export default ({ context, sentence, section, index }: ContextualizationProps) =
     }
 
     useEffect(() => {
-        if (!contextualList[section]) contextualList[section] = new Map()
-        if(contextualList[section].has(index)) {
-            if(contextualList[section].get(index) == null){
+        if (!titleList[section]) titleList[section] = new Map()
+        if(titleList[section].has(index)) {
+            if(titleList[section].get(index) == null){
                 setDataError(true)
                 return
             }
-            setContextualization(contextualList[section].get(index)??null)
+            setTitle(titleList[section].get(index)??null)
         } else {
             setLoading(true)
             requestContexualizations()
@@ -65,18 +65,22 @@ export default ({ context, sentence, section, index }: ContextualizationProps) =
     })
 
     if(apiError || dataError) return (
-        <p 
-            className="text-sm text-left text-red-700 cursor-pointer"
+        <div 
+            className='text-left text-base mb-4 text-red-700 cursor-pointer'
             onClick={()=>{retry()}}>
             An error occured, click to retry
-        </p>
+        </div>
     )
 
     if(loading) return (
-        <TextLoader/>
+        <div className="pb-4">
+            <TitleLoader/>
+        </div>
     )
-    
+
     return (
-        <p className="text-sm text-left text-slate-700">{contextualization}</p>
+        <div className='text-left text-base mb-4 text-slate-700'>
+            {title}
+        </div>
     )
 }

@@ -32,7 +32,6 @@ export default ({file}: ReaderProps) => {
     const [showPanel, setShowPanel] = useState<boolean>(false)
 
     const [sectionAccuracies, setSectionAccuracies] = useState<Object>({})
-
     const getExcerpt = async (context: string) => {
         return fetch("http://127.0.0.1:8000/excerpt", {
             method : "POST",
@@ -86,6 +85,7 @@ export default ({file}: ReaderProps) => {
 
             //TODO: 
             //- Check if there are better ways to handle section content
+            //- Handle full section evaluation
             renditionRef.current.book.loaded.spine.then((spine:any) => {
                 const textContent = spine.get(section.href).contents.lastElementChild.textContent
 
@@ -341,8 +341,11 @@ export default ({file}: ReaderProps) => {
     return (
         <div className='h-full w-full flex relative overflow-hidden'>
             <div className={`h-full ${showPanel?"w-2/3":"w-full"} pt-8 transition-all duration-500 flex flex-row relative justify-center`}>
-                <Background currentPage={currentLocation.current ? currentLocation.current.page : null} context={pageContent??""}/>
-                <div className='h-full w-[38rem] relative'>
+                {/*
+                    <Background currentPage={currentLocation.current ? currentLocation.current.page : null} context={pageContent??""}/>
+                */}
+
+<               div className='h-full w-[38rem] relative'>
                     <ReactReader
                         location={location}
                         locationChanged={locationChanged}
@@ -363,7 +366,7 @@ export default ({file}: ReaderProps) => {
                     </div>
                 </div>
             </div>
-            <div className={`h-full ${showPanel?"w-1/3":"w-0"} transition-all duration-500 bg-white`}>
+            <div className={`h-full ${showPanel?"w-1/3":"w-0"} transition-all duration-500 bg-slate-50`}>
                 <HighlightPanel 
                     sectionCanonical={sectionCanonical?sectionCanonical:''}
                     highlights={highlights}

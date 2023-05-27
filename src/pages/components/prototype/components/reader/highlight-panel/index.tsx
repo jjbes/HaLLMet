@@ -30,8 +30,8 @@ export default ({
     //- Prompts
     return (
         <div className="max-h-full w-full overflow-auto pl-4 pb-4 pr-6">
-            <div className='sticky top-0 text-end bg-white z-50 pt-4 pb-4'>
-                Section accuracy: {  
+            <div className='sticky top-0 text-sm text-end bg-slate-50 z-50 pt-4 pb-4'>
+                Highlights accuracy: {  
                     sectionAccuracies[sectionCanonical]?.total ?
                     (
                         sectionAccuracies[sectionCanonical].correct/

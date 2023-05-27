@@ -21,7 +21,7 @@ from templates.rephrase import _REPHRASE_TEMPLATE
 from templates.summarize import _SUMMARIZE_TEMPLATE
 from templates.translate import _TRANSLATE_TEMPLATE
 from templates.triples import _TRIPLES_EXTRACTION_TEMPLATE
-from templates.contextualize import _CONTEXTUALIZE_TEMPLATE
+from templates.title import _TITLE_TEMPLATE
 
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -172,15 +172,6 @@ def excerpt(item: Exerpt):
     verify_context_size(item.context)
     return request_GPT(_EXCERPT_TEMPLATE.format(context=item.context))
 
-""" Explain a sentence based on a context """
-class Explain(BaseModel):
-    context: str
-    sentence: str
-@app.post("/explain")
-def explain(item: Explain):
-    verify_context_size(item.context)
-    return request_GPT(_EXPLAIN_TEMPLATE.format(context=item.context, sentence=item.sentence))
-
 """ Extract location of the context """
 class Location(BaseModel):
     context: str
@@ -210,11 +201,20 @@ def prompt_explain():
 def prompt_location():
     return {"response":_LOCATION_TEMPLATE}
 
-""" Contextualize extracts based on the context """
+""" Title extracts based on the context """
+class Title(BaseModel):
+    context: str
+    sentence: str
+@app.post("/title")
+def explain(item: Title):
+    verify_context_size(item.context)
+    return request_GPT(_TITLE_TEMPLATE.format(context=item.context, sentences=item.sentence))
+
+""" Explain a sentence based on a context """
 class Explain(BaseModel):
     context: str
     sentence: str
-@app.post("/contextualize")
+@app.post("/explain")
 def explain(item: Explain):
     verify_context_size(item.context)
     return request_GPT(_EXPLAIN_TEMPLATE.format(context=item.context, sentence=item.sentence))
