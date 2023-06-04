@@ -4,14 +4,13 @@ import ContentLoader from "react-content-loader"
 export default () => (
   <ContentLoader 
     speed={2}
-    width={360}
-    height={32}
-    viewBox="0 0 360 32"
+    width={378}
+    height={80}
+    viewBox="0 0 378 80"
     backgroundColor="#f3f3f3"
     foregroundColor="#ecebeb"
   >
-    <rect x="2" y="0" rx="3" ry="3" width="360" height="12" /> 
-    <rect x="2" y="20" rx="3" ry="3" width="360" height="12" /> 
+    <rect x="0" y="0" rx="0" ry="0" width="378" height="80" />
   </ContentLoader>
 )
 

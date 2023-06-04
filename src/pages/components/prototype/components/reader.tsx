@@ -6,7 +6,7 @@ import { get_encoding } from "@dqbd/tiktoken"
 
 import ButtonHighlight from './reader/button-highlight'
 import HighlightPanel from './reader/highlight-panel'
-import Background from './reader/background'
+//import Background from './reader/background'
 
 let excerptList: string[] = []
 
@@ -21,7 +21,7 @@ export default ({file}: ReaderProps) => {
 
     const [sectionCanonical, setSectionCanonical] = useState<string|null>(null)
     const [location, setLocation] = useState<string>("0")
-    const [pageContent, setPageContent] = useState<string|null>()
+    //const [pageContent, setPageContent] = useState<string|null>()
     const [annotations, _] = useState<any>({})
 
     const [nbReqLoading, setNbReqLoading] = useState<number>(0)
@@ -250,6 +250,7 @@ export default ({file}: ReaderProps) => {
         //Set current section
         setSectionCanonical(section.canonical)
         //Get page content
+        /*
         const splitCfi = start.cfi.split('/')
         const baseCfi = splitCfi[0] + '/' + splitCfi[1] + '/' + splitCfi[2] + '/' + splitCfi[3]
         const startCfi = start.cfi.replace(baseCfi, '')
@@ -258,6 +259,7 @@ export default ({file}: ReaderProps) => {
         const pageContent = renditionRef.current.getRange(rangeCfi).toString().replace(/\s/g,' ')
         const pageContentClean = pageContent.replace(/\s/g,' ').replace(/\s{2,}/g, ' ')
         setPageContent(pageContentClean)
+        */
     }, [location])
 
     //Set Highlights

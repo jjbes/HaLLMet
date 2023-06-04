@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import TitleLoader from './title-loader'
+import TitleLoader from './loaders/title-loader'
 
 let titleList: {[k: string]: Map<number, string|null>} = {}
 
@@ -66,7 +66,7 @@ export default ({ context, sentence, section, index }: TitleProps) => {
 
     if(apiError || dataError) return (
         <div 
-            className='text-left text-base mb-4 text-red-700 cursor-pointer'
+            className='text-left text-base font-semibold text-red-700 cursor-pointer'
             onClick={()=>{retry()}}>
             An error occured, click to retry
         </div>
@@ -79,7 +79,7 @@ export default ({ context, sentence, section, index }: TitleProps) => {
     )
 
     return (
-        <div className='text-left text-base mb-4 text-slate-700'>
+        <div className='text-left text-base font-semibold text-slate-700'>
             {title}
         </div>
     )

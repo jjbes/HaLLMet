@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import TextLoader from './text-loader'
+import TextLoader from './loaders/text-loader'
 
 let contextualList: {[k: string]: Map<number, string|null>} = {}
 
@@ -77,6 +77,6 @@ export default ({ context, sentence, section, index }: ContextualizationProps) =
     )
     
     return (
-        <p className="text-sm text-left text-slate-700">{contextualization}</p>
+        <p className="text-sm text-left text-slate-700 mt-2">{contextualization}</p>
     )
 }

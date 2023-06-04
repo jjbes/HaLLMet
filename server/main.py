@@ -217,4 +217,4 @@ class Explain(BaseModel):
 @app.post("/explain")
 def explain(item: Explain):
     verify_context_size(item.context)
-    return request_GPT(_EXPLAIN_TEMPLATE.format(context=item.context, sentence=item.sentence))
+    return request_GPT(_EXPLAIN_TEMPLATE.format(context=item.context, sentence=item.sentence), max_tokens=80)

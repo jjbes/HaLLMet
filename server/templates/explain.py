@@ -1,8 +1,5 @@
 _EXPLAIN_TEMPLATE = \
-"""Instruction: The following is a conversation between a user and a language model.
-
-User: Explain the meaning of the following excerpt based only on the specififed context
-User: Use less than 50 words
+"""Instruction: Explain the meaning of the following excerpt according to the specififed context. Use less than 50 words.
 
 Excerpt: {sentence}
 

@@ -1,38 +1,27 @@
 import React from 'react'
-import TextLoader from './highlight-card/text-loader'
-import QuoteLoader from './highlight-card/quote-loader'
-import TitleLoader from './highlight-card/title-loader'
+import QuoteLoader from './highlight-card/loaders/quote-loader'
+import TitleLoader from './highlight-card/loaders/title-loader'
 
 type HighlightCardProps = {
-    index:number,
-    sectionCanonical: string, 
+    index:number
 }
 export default ({
     index,
-    sectionCanonical,
 }: HighlightCardProps) => {
     return (
-        <>
-            <p 
-            key={`title-${sectionCanonical}-${index}`}
-            id={`page-${index+1}`}
-            className={`${!index?"":"mt-10"} text-2xl bold font-serif text-left text-slate-400`}>
-                {index+1+"."}
-            </p>
-            <div 
-                className='relative h-full p-4 border-l-4 border-l-slate-400'>
-                <div className='mb-4'>
-                    <TitleLoader/>
-                </div>
-                
-                <div className='mb-4'>
-                    <TextLoader/>
-                </div>
-                
-                <div>
-                    <QuoteLoader/>
-                </div>
-            </div>
-        </>
+        <div 
+        key={`highlight-loader-${index}`}
+        className={`${!index?"":"mt-10"} relative p-4 bg-white`}>
+            <TitleLoader/>
+            {
+                Array(3).fill(0).map((_, quote_i) => 
+                    <div 
+                    key={quote_i}
+                    className='mt-4'>
+                        <QuoteLoader/>
+                    </div>
+                )
+            }
+        </div>
     )
 }

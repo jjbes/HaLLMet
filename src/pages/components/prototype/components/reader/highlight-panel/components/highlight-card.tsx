@@ -19,39 +19,44 @@ export default ({
     highlightedCfi,
     setHighlightedCfi,
 }: HighlightCardProps) => {
+
+    const highlightEvent = (cfiRange: string) => {
+        setHighlightedCfi(cfiRange)
+    }
+
     return (
         <>
-            <p 
-            key={`title-${sectionCanonical}-${index}`}
-            id={`page-${index+1}`}
-            className={`${!index?"":"mt-10"} text-2xl bold font-serif text-left text-slate-400`}>
-                {index+1+"."} 
-            </p>
-
-            <div className={`relative h-full p-4 border-l-4 border-l-slate-400`}>
+            <div 
+            key={`highlight-${index}`}
+            className={`${!index?"":"mt-10"} relative p-4 bg-white`}>
                 <Title 
-                    section={sectionCanonical}
-                    index={index}
-                    context={context}
-                    sentence={Object.entries(highlights).map((element: any) => element[1].content).join('\n')}/>
+                section={sectionCanonical}
+                index={index}
+                context={context}
+                sentence={Object.entries(highlights).map((element: any) => element[1].content).join('\n')}/>
 
-                  
-                <Contextualization 
-                    key={`contextualization-${sectionCanonical}-${index}`}
-                    section={sectionCanonical}
-                    index={index}
-                    context={context}
-                    sentence={Object.entries(highlights).map((element: any) => element[1].content).join('\n')}/>
-                
                 {
                     
-                    highlights.map((element: any) => {
-                        return <Quote 
-                            key={`quote-${sectionCanonical}-${element.href}`}
-                            content={element.content}
-                            href={element.href}
-                            highlightedCfi={highlightedCfi}
-                            setHighlightedCfi={setHighlightedCfi} />
+                    highlights.map((element: any, hl_index:number) => {
+                        return (
+                            <div 
+                            key={hl_index}
+                            id={element.href}
+                            className={`p-4 border-l-4 ${element.href==highlightedCfi?"border-yellow-300 bg-yellow-50":"border-slate-200 bg-slate-50"} cursor-pointer mt-4`}
+                            onClick={()=>{highlightEvent(element.href)}}>
+                                <div className={"font-medium"}>
+                                    <Quote 
+                                    content={element.content}
+                                    href={element.href} />
+                                </div>
+                                
+                                <Contextualization 
+                                    section={sectionCanonical}
+                                    index={element.href}
+                                    context={context}
+                                    sentence={element.content}/>
+                            </div>
+                        )
                     })
                 }
             </div>
