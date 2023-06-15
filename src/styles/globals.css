@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  transition: background 5000ms linear;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(var(--background-end-rgb), 50)
+    )
+    rgb(var(--background-start-rgb));
+}
+
+html, body, #__next {
+  height: 100%;
+}
+
+.h-1\/12 {
+  height: calc(100% / 12);
+}
+
+.h-11\/12 {
+  height: calc(11 * ( 100% / 12 ));
+}
+
+.bookmark{ 
+  position: relative; 
+  height: 0.6rem; 
+  width: 1.3rem; 
+  padding: 0px; 
+  border-top: 0.6rem solid yellow; 
+  border-bottom: 0.6rem solid yellow; 
+  border-right: 0.6rem solid transparent; 
+}
+
+.filter{
+  fill:white;
+  fill-opacity: 1;
+  /*cursor: pointer;*/
+}
+
+.highlight{
+  fill:rgb(148 163 184);
+  fill-opacity: 0.15;
+  mix-blend-mode: multiply;
+}
+.highlighted{
+  fill:rgb(251 191 36);
+  fill-opacity: 0.15;
+  mix-blend-mode: multiply;
+}
+
+.ReactModal__Overlay--after-open{
+  z-index: 99999999
+}
