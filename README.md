@@ -7,6 +7,11 @@ Inspired by hyper-reading techniques, HaLLMet is a system designed to address th
 <img width="960" alt="Sans titre" src="https://github.com/jjbes/HaLLMet/assets/18220944/b9c5a283-9eae-431a-a704-837906e55b8c">
 
 ## Getting Started
+### Requirements
+* NodeJS ([install](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
+* Python 3 ([install](https://www.python.org/downloads/))
+* Uvicorn ([install](https://www.uvicorn.org/))
+
 ### Dependencies
 To install the client dependencies, navigate to the root folder and execute the following command:
 ```bash
