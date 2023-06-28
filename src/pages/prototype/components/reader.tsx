@@ -322,9 +322,14 @@ export default ({file}: ReaderProps) => {
         setToggleHighlights(!toggleHighlights)
     }
 
+    let fontSize = 100
+    if(window.screen.availHeight > 900) {
+        fontSize = 130
+    }
+
     return (
         <div className='h-full w-full flex relative overflow-hidden'>
-            <div className={`h-full ${showPanel?"w-2/3":"w-full"} pt-8 transition-all duration-500 flex flex-row relative justify-center`}>
+            <div className={`h-full ${showPanel?"w-2/3":"w-full"} pt-[2.5%] transition-all duration-500 flex flex-row relative justify-center`}>
 <               div className='h-full w-[38rem] relative'>
                     <ReactReader
                         location={location}
@@ -335,6 +340,7 @@ export default ({file}: ReaderProps) => {
                         }}
                         getRendition={rendition => {
                             renditionRef.current = rendition
+                            renditionRef.current.themes.fontSize(`${fontSize}%`)
                         }}
                     />
                     <div 
