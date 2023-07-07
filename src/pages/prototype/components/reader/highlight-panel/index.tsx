@@ -13,7 +13,7 @@ type HighlightProps = {
     retryHighlight:Function
     sectionAccuracies:any
 }
-export default ({
+const HighlightPanel = ({
     sectionCanonical, 
     highlights,
     highlightedCfi, 
@@ -84,3 +84,5 @@ export default ({
         </>
     )
 }
+
+export default HighlightPanel

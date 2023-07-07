@@ -8,11 +8,20 @@ import HighlightPanel from './reader/highlight-panel'
 let excerptList: string[] = []
 
 type ReaderProps = {
-    file: Blob | MediaSource
+    file: Blob
 }
 
-export default ({file}: ReaderProps) => {
-    const url = useRef(URL.createObjectURL(file))
+const Reader = ({file}: ReaderProps) => {
+    //Handle different screen sizes
+    const [fontSize, setFontSize] = useState(100)
+    useEffect(() => {
+        if (window.screen.availHeight > 800) {
+            setFontSize(130)
+        }
+    }, [])
+
+    const blob = new Blob([file])
+    const url = useRef<string>(URL.createObjectURL(blob))
     const renditionRef = useRef<any>(null)
     const currentLocation = useRef<any>(null)
 
@@ -322,11 +331,6 @@ export default ({file}: ReaderProps) => {
         setToggleHighlights(!toggleHighlights)
     }
 
-    let fontSize = 100
-    if(window.screen.availHeight > 900) {
-        fontSize = 130
-    }
-
     return (
         <div className='h-full w-full flex relative overflow-hidden'>
             <div className={`h-full ${showPanel?"w-2/3":"w-full"} pt-[2.5%] transition-all duration-500 flex flex-row relative justify-center`}>
@@ -368,3 +372,5 @@ export default ({file}: ReaderProps) => {
             
     )
 }
+
+export default Reader

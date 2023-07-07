@@ -4,8 +4,7 @@ type QuoteProps = {
     content: string
     href: string
 }
-export default ({ content }: QuoteProps) => {
-
+const Quote = ({ content }: QuoteProps) => {
     return (
     <div className="mt-4">
         <blockquote className='flex flex-row'>
@@ -17,3 +16,5 @@ export default ({ content }: QuoteProps) => {
     </div>
     )
 }
+
+export default Quote

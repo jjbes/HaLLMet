@@ -5,7 +5,7 @@ import TitleLoader from './highlight-card/loaders/title-loader'
 type HighlightCardProps = {
     index:number
 }
-export default ({
+const HighlightCardLoader = ({
     index,
 }: HighlightCardProps) => {
     return (
@@ -25,3 +25,5 @@ export default ({
         </div>
     )
 }
+
+export default HighlightCardLoader

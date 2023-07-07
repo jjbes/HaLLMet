@@ -9,7 +9,7 @@ type TitleProps = {
     section:string
     index:number
 }
-export default ({ context, sentence, section, index }: TitleProps) => {
+const Title = ({ context, sentence, section, index }: TitleProps) => {
     const [title, setTitle] = useState<string|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [apiError, setApiError] = useState<boolean>(false)
@@ -84,3 +84,4 @@ export default ({ context, sentence, section, index }: TitleProps) => {
         </div>
     )
 }
+export default Title

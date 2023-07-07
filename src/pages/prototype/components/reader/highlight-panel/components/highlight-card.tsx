@@ -11,7 +11,7 @@ type HighlightCardProps = {
     highlightedCfi:string|null,
     setHighlightedCfi:Function,
 }
-export default ({
+const HighlightCard = ({
     highlights,
     context,
     index,
@@ -23,6 +23,8 @@ export default ({
     const highlightEvent = (cfiRange: string) => {
         setHighlightedCfi(cfiRange)
     }
+
+    if (highlights == null) return <></>
 
     return (
         <>
@@ -63,3 +65,5 @@ export default ({
         </>
     )
 }
+
+export default HighlightCard

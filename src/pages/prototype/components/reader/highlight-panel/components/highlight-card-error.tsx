@@ -4,7 +4,7 @@ type HighlightCardProps = {
     index:number
     retryHighlight:Function
 }
-export default ({
+const HighlightCardError = ({
     index,
     retryHighlight
 }: HighlightCardProps) => {
@@ -21,3 +21,4 @@ export default ({
         </>
     )
 }
+export default HighlightCardError

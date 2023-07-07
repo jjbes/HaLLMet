@@ -4,7 +4,7 @@ type DefaultBackgroundProps = {
     nbReqLoading: number,
     toggleHighlights: boolean
 }
-export default ({ toggleHighlights, nbReqLoading }: DefaultBackgroundProps) => {    
+const ButtonHighlight =  ({ toggleHighlights, nbReqLoading }: DefaultBackgroundProps) => {    
     return (
         <button 
             className={
@@ -24,3 +24,5 @@ export default ({ toggleHighlights, nbReqLoading }: DefaultBackgroundProps) => {
         </button>
     )
 }
+
+export default ButtonHighlight

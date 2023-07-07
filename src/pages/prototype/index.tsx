@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import Reader from './components/reader'
 import Uploader from './components/uploader'
 
-export default () => {
-    const [file, setFile] = useState()
+const Prototype =  () => {
+    const [file, setFile] = useState<any>(null)
 
     function handleChange(event: any) {
         setFile(event.target.files[0])
@@ -19,3 +19,5 @@ export default () => {
     </>
     )
 }
+
+export default Prototype

@@ -2,7 +2,7 @@ import React from 'react'
 
 import EpubReader from './prototype'
 
-export default () => {
+export default function Index() {
     return (
         <>
         <div className="h-full flex justify-center ">

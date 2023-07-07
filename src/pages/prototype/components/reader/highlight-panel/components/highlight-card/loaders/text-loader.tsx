@@ -1,7 +1,7 @@
 import React from "react"
 import ContentLoader from "react-content-loader"
 
-export default () => (
+const TextLoader = () => (
   <ContentLoader 
     speed={2}
     width={340}
@@ -16,4 +16,4 @@ export default () => (
     <rect x="2" y="40" rx="3" ry="3" width="340" height="10" />
   </ContentLoader>
 )
-
+export default TextLoader

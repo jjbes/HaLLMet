@@ -9,7 +9,7 @@ type ContextualizationProps = {
     section:string
     index:number
 }
-export default ({ context, sentence, section, index }: ContextualizationProps) => {
+const Contextualization = ({ context, sentence, section, index }: ContextualizationProps) => {
     const [contextualization, setContextualization] = useState<string|null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [apiError, setApiError] = useState<boolean>(false)
@@ -80,3 +80,5 @@ export default ({ context, sentence, section, index }: ContextualizationProps) =
         <p className="text-sm text-left text-slate-700 mt-2">{contextualization}</p>
     )
 }
+
+export default Contextualization

@@ -1,7 +1,7 @@
 import React from "react"
 import ContentLoader from "react-content-loader"
 
-export default () => (
+const TitleLoader = () => (
   <ContentLoader 
     speed={2}
     width={378}
@@ -15,3 +15,4 @@ export default () => (
   </ContentLoader>
 )
 
+export default TitleLoader
