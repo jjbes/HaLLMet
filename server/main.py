@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -14,7 +15,7 @@ from templates.title import _TITLE_TEMPLATE
 enc = tiktoken.get_encoding("cl100k_base")
 
 origins = [
-    "http://localhost:3000",
+    os.getenv("FRONTEND_URL"),
 ]
 app = FastAPI()
 app.add_middleware(

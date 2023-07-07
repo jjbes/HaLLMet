@@ -38,7 +38,7 @@ const Reader = ({file}: ReaderProps) => {
 
     const [sectionAccuracies, setSectionAccuracies] = useState<Object>({})
     const getExcerpt = async (context: string) => {
-        return fetch("http://127.0.0.1:8000/excerpt", {
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/excerpt`, {
             method : "POST",
             headers: {
                 'Accept': 'application/json',

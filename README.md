@@ -29,11 +29,7 @@ pip install -r requirements.txt
 ```
 
 ### API Key
-The prototype utilizes the `gtp-3.5-turbo` model from OpenAI. In order to use the prototype, you need to provide your own API key. Within the `server` folder, create a .env file with the following command, replacing "YOUR_KEY" with your OpenAI API key:
-```bash
-# Create .env file with your OpenAI key
-echo "OPENAI_KEY=YOUR_KEY" > .env
-```
+The prototype utilizes the `gtp-3.5-turbo` model from OpenAI. In order to use the prototype, you need to provide your own API key. Within the `server` folder, rename `config.env.example` to `config.env` and replace "YOUR_OPENAI_KEY" with your OpenAI API key.
 
 
 ### Running the Prototype
@@ -50,6 +46,6 @@ For the backend, go to the server folder and start the server using the command 
 cd server
 
 # Run server
-uvicorn main:app --reload
+uvicorn main:app --reload --env-file config.env
 ```
 The server will be running at [http://localhost:8000](http://localhost:8000)

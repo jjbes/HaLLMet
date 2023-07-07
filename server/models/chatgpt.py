@@ -1,8 +1,8 @@
-from dotenv import dotenv_values
 import openai
+import os
 
-config = dotenv_values(".env")
-openai.api_key = config["OPENAI_KEY"]
+openai_key = os.getenv("OPENAI_KEY")
+openai.api_key = openai_key
 
 def request_GPT(content, max_tokens=300):
     response = openai.ChatCompletion.create(

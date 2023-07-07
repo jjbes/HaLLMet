@@ -18,7 +18,7 @@ const Contextualization = ({ context, sentence, section, index }: Contextualizat
     const requestContexualizations = async () =>{
         contextualList[section].set(index, "")
 
-        return fetch("http://127.0.0.1:8000/explain", {
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/explain`, {
             method : "POST",
             headers: {
                 'Accept': 'application/json',

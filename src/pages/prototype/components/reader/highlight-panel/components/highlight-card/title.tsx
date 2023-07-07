@@ -18,7 +18,7 @@ const Title = ({ context, sentence, section, index }: TitleProps) => {
     const requestContexualizations = async () =>{
         titleList[section].set(index, "")
 
-        return fetch("http://127.0.0.1:8000/title", {
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/title`, {
             method : "POST",
             headers: {
                 'Accept': 'application/json',

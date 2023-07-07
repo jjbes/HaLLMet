@@ -26,7 +26,8 @@ yarn-error.log*
 
 # env files
 .env*.local
-server/.env
+.env*.production
+server/*.env
 *.env
 
 # vercel
@@ -39,3 +40,9 @@ next-env.d.ts
 #cache
 server/__pycache__
 server/*/__pycache__
+
+#gcloud
+.gcloudignore
+app.yaml
+*/.gcloudignore
+*/app.yaml
