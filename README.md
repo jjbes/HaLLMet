@@ -3,7 +3,7 @@
 ## About
 Inspired by hyper-reading techniques, HaLLMet is a system designed to address the perception that reading on screens is less effective than physical texts. HaLLMet focuses on improving the reading experience of digital books by extracting meaningful information from documents and provide alternative reading methods.
 
-A demo is available at : https://www.hallmet-frontend.ew.r.appspot.com
+A demo is available at : https://hallmet-frontend.ew.r.appspot.com
 
 ## Screenshot
 <img width="960" alt="Sans titre" src="https://github.com/jjbes/HaLLMet/assets/18220944/b9c5a283-9eae-431a-a704-837906e55b8c">
